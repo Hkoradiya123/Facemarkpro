@@ -1,0 +1,25 @@
+# .dockerignore
+# Python Caching & Environments
+__pycache__
+*.pyc
+.venv/
+env/
+
+# Data & Documents (if not needed at runtime)
+*.csv
+*.xlsx
+*.md
+*.txt
+.gitignore
+.git/
+.DS_Store
+
+# Common ML/Deployment junk
+models/
+data/
+datasets/
+logs/
+.idea/
+.vscode/
+
+# Ignore files not needed in the final image
