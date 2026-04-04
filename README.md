@@ -2,6 +2,16 @@
 
 A modern, scalable facial recognition attendance system built with Flask, MongoDB, and InsightFace.
 
+> 🤗 **Live demo / mirror:** [Hugging Face Space — jinksQspider/Facemarkpro](https://huggingface.co/spaces/jinksQspider/Facemarkpro)
+>
+> This repository is automatically synced to the Hugging Face Space above via the
+> [`.github/workflows/sync_to_hf.yml`](.github/workflows/sync_to_hf.yml) GitHub Actions workflow.
+> Every push to the `main` branch triggers a force-push to the Space.
+>
+> **Setup:** To enable the sync, add a repository secret named `HF_TOKEN` containing a
+> [Hugging Face write token](https://huggingface.co/settings/tokens) for the `jinksQspider` account
+> (`Settings → Secrets and variables → Actions → New repository secret`).
+
 ## Features
 
 - **Real-time Face Recognition**: Live attendance tracking using webcam

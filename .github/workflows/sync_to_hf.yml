@@ -1,0 +1,54 @@
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches:
+      - main
+
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+# Only read access to the repository contents is needed
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so the mirror is complete
+
+      - name: Validate HF_TOKEN secret
+        run: |
+          if [ -z "${{ secrets.HF_TOKEN }}" ]; then
+            echo "::error::HF_TOKEN secret is not set. Add a Hugging Face write token as a repository secret named HF_TOKEN."
+            exit 1
+          fi
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+
+          # Store credentials securely (avoids embedding token in the remote URL)
+          echo "https://jinksQspider:${HF_TOKEN}@huggingface.co" \
+            > "${RUNNER_TEMP}/.git-credentials"
+          git config --global credential.helper \
+            "store --file ${RUNNER_TEMP}/.git-credentials"
+
+          # Add the HuggingFace Space as a remote (no token in the URL)
+          git remote add huggingface \
+            "https://huggingface.co/spaces/jinksQspider/Facemarkpro"
+
+          # Force-push so the Space stays in sync with main
+          git push --force huggingface HEAD:main
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "${RUNNER_TEMP}/.git-credentials"
