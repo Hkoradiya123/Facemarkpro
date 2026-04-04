@@ -9,14 +9,6 @@ import os
 
 load_dotenv()  # Loads variables from .env
 
-from flask import Flask
-from app.db.mongo_client import init_mongo_client
-
-app = Flask(__name__)
-
-# Initialize MongoDB client
-init_mongo_client(app)
-
 bp = Blueprint('faculty', __name__)
 
 # --------------------------------------------------------------------
