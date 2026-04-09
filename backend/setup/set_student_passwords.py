@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 
 def get_db():
     """Create a direct MongoDB client using env vars, defaulting to localhost."""
-    load_dotenv()
-    mongodb_uri = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    load_dotenv(os.path.join(project_root, '.env'))
+    mongodb_uri = os.environ.get('MONGO_URI') or os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
     mongodb_db = os.environ.get('MONGODB_DB', 'attendance_db')
     client = MongoClient(mongodb_uri)
     return client[mongodb_db]
