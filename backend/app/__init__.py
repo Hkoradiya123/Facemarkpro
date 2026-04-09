@@ -94,7 +94,7 @@ def create_app():
     
     react_dist = os.environ.get(
         'REACT_DIST_DIR',
-        os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'frontend', 'dist')),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'dist')),
     )
 
     react_route_prefixes = (
