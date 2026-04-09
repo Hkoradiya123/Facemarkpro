@@ -51,6 +51,9 @@
   min-height: 70vh;
   width: 100%;
   max-width: none;
+  touch-action: pan-y;
+}
+.faculty-widget-grid.mobile-unlocked {
   touch-action: none;
 }
 .faculty-widget-grid .react-grid-item {
@@ -162,6 +165,31 @@
   align-items: center;
   gap: 8px;
 }
+.widget-mobile-move-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.widget-move-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast);
+}
+.widget-move-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(37, 99, 235, 0.4);
+}
+.widget-move-btn:active {
+  transform: translateY(0);
+}
 .widget-hover-hint {
   opacity: 0;
   transform: translateY(4px);
@@ -265,6 +293,12 @@ body.dark .bar-segment[data-tooltip]::before {
 }
 
 @media (max-width: 768px) {
+  .faculty-widget-grid.mobile-locked {
+    touch-action: pan-y;
+  }
+  .faculty-widget-grid.mobile-unlocked {
+    touch-action: none;
+  }
   .widget-hover-hint {
     display: none;
   }

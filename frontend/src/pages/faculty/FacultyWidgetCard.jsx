@@ -3,7 +3,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate 
 import { Responsive, WidthProvider } from "react-grid-layout";
 import {
   FaArrowRightFromBracket, FaBars, FaCalendarDays, FaCamera, FaChartLine,
-  FaClock, FaDoorOpen, FaEye, FaEyeSlash, FaGear, FaHouse, FaPlus, FaUpload, FaUserCheck,
+  FaArrowDown, FaArrowUp, FaClock, FaDoorOpen, FaEye, FaEyeSlash, FaGear, FaHouse, FaPlus, FaUpload, FaUserCheck,
   FaUserGear, FaUserGraduate, FaUserPen, FaUsers, FaVideo, FaPlay
 } from "react-icons/fa6";
 
@@ -17,7 +17,16 @@ import MiniCalendarWidget from "../MiniCalendarWidget";
 import { normalizeFacultyLayout, getWidgetSizeClass } from "../../utils/constants";
 import { PageShell, SectionCard, StatGrid, SimpleTable, ProfileFields, FormGrid } from "../../components/Shared";
 
-function FacultyWidgetCard({ widget, onRemove, data }) {
+function FacultyWidgetCard({
+  widget,
+  onRemove,
+  data,
+  showMoveControls = false,
+  canMoveUp = false,
+  canMoveDown = false,
+  onMoveUp,
+  onMoveDown,
+}) {
   const widgetId = widget.i;
   const catalogItem = facultyWidgetCatalog.find((item) => item.id === widgetId);
   const sizeClass = getWidgetSizeClass(widget);
@@ -35,6 +44,30 @@ function FacultyWidgetCard({ widget, onRemove, data }) {
           <strong>{catalogItem?.title || widgetId}</strong>
         </div>
         <div className="widget-header-actions">
+          {showMoveControls ? (
+            <div className="widget-mobile-move-controls">
+              {canMoveUp ? (
+                <button
+                  type="button"
+                  className="widget-move-btn"
+                  onClick={onMoveUp}
+                  aria-label="Move widget up"
+                >
+                  <FaArrowUp />
+                </button>
+              ) : null}
+              {canMoveDown ? (
+                <button
+                  type="button"
+                  className="widget-move-btn"
+                  onClick={onMoveDown}
+                  aria-label="Move widget down"
+                >
+                  <FaArrowDown />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {isGraphWidget ? <span className="widget-hover-hint">Hover for insights</span> : null}
           <button type="button" className="widget-remove-btn" onClick={() => onRemove(widgetId)}>
             x

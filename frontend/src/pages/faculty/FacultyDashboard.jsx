@@ -3,7 +3,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate 
 import { Responsive, WidthProvider } from "react-grid-layout";
 import {
   FaArrowRightFromBracket, FaBars, FaCalendarDays, FaCamera, FaChartLine,
-  FaEye, FaEyeSlash, FaGear, FaHouse, FaPlus, FaUpload, FaUserCheck,
+  FaEye, FaEyeSlash, FaGear, FaHouse, FaLock, FaLockOpen, FaPlus, FaUpload, FaUserCheck,
   FaUserGear, FaUserGraduate, FaUserPen, FaUsers, FaVideo, FaPlay, FaRotateLeft
 } from "react-icons/fa6";
 
@@ -14,10 +14,16 @@ import { PageShell, SectionCard, StatGrid, SimpleTable, ProfileFields, FormGrid,
 import FacultyWidgetCard from "./FacultyWidgetCard";
 
 function FacultyDashboard() {
+  const MOBILE_DASHBOARD_LOCK_KEY = "faculty_mobile_dashboard_locked";
   const profile = useSessionProfile("faculty");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [layoutReady, setLayoutReady] = useState(false);
   const [activeBreakpoint, setActiveBreakpoint] = useState("lg");
+  const [isMobileLayoutLocked, setIsMobileLayoutLocked] = useState(() => {
+    const stored = localStorage.getItem(MOBILE_DASHBOARD_LOCK_KEY);
+    if (stored == null) return true;
+    return stored !== "false";
+  });
   const [dashboardData, setDashboardData] = useState({
     lectures: [],
     attendance_stats: { Present: 0, Absent: 0 },
@@ -328,6 +334,10 @@ function FacultyDashboard() {
   }, [widgets, mobileWidgets]);
 
   useEffect(() => {
+    localStorage.setItem(MOBILE_DASHBOARD_LOCK_KEY, isMobileLayoutLocked ? "true" : "false");
+  }, [isMobileLayoutLocked]);
+
+  useEffect(() => {
     let mounted = true;
 
     async function loadDashboard() {
@@ -441,6 +451,36 @@ function FacultyDashboard() {
 
   const isMobileBreakpoint = activeBreakpoint === "sm" || activeBreakpoint === "xs" || activeBreakpoint === "xxs";
 
+  const orderedMobileWidgetIds = useMemo(
+    () => normalizeMobileStack(mobileWidgets).map((item) => item.i),
+    [mobileWidgets]
+  );
+
+  const mobileOrderIndexMap = useMemo(() => {
+    const map = new Map();
+    orderedMobileWidgetIds.forEach((id, index) => {
+      map.set(id, index);
+    });
+    return map;
+  }, [orderedMobileWidgetIds]);
+
+  const gridClassName =
+    "faculty-widget-grid" + (isMobileBreakpoint && !isMobileLayoutLocked ? " mobile-unlocked" : " mobile-locked");
+
+  const moveMobileWidget = (widgetId, direction) => {
+    const ordered = normalizeMobileStack(mobileWidgets);
+    const fromIndex = ordered.findIndex((item) => item.i === widgetId);
+    if (fromIndex < 0) return;
+
+    const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= ordered.length) return;
+
+    const next = [...ordered];
+    const [moving] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moving);
+    setMobileWidgets(normalizeMobileStack(next));
+  };
+
   useEffect(() => {
     if (!layoutReady) return;
 
@@ -471,9 +511,18 @@ function FacultyDashboard() {
       subtitle="React version of the faculty dashboard shell and its core widgets."
       profile={profile}
       actions={
-        <button className="pagination-btn" type="button" onClick={handleResetLayout}>
-          <FaRotateLeft /> Reset Layout
-        </button>
+        <Fragment>
+          <button
+            className="pagination-btn"
+            type="button"
+            onClick={() => setIsMobileLayoutLocked((current) => !current)}
+          >
+            {isMobileLayoutLocked ? <FaLock /> : <FaLockOpen />} {isMobileLayoutLocked ? "Locked" : "Unlocked"}
+          </button>
+          <button className="pagination-btn" type="button" onClick={handleResetLayout}>
+            <FaRotateLeft /> Reset Layout
+          </button>
+        </Fragment>
       }
       sidebarAction={
         <button className="widget-add-trigger" type="button" onClick={() => setIsPickerOpen(true)}>
@@ -483,7 +532,7 @@ function FacultyDashboard() {
     >
       {!layoutReady ? <DashboardSkeleton /> : null}
       <ResponsiveGridLayout
-        className="faculty-widget-grid"
+        className={gridClassName}
         layouts={{ lg: widgets, sm: mobileWidgets }}
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 560, xxs: 0 }}
         cols={{ lg: 12, md: 10, sm: 6, xs: 6, xxs: 6 }}
@@ -492,7 +541,9 @@ function FacultyDashboard() {
         containerPadding={[0, 0]}
         draggableHandle={isMobileBreakpoint ? ".faculty-widget-card" : ".widget-drag-handle"}
         draggableCancel=".widget-remove-btn, .widget-add-trigger, button, input, textarea, select, a, .calendar-day-btn, .calendar-arrow"
-        isResizable={!isMobileBreakpoint}
+        isDraggable={!isMobileBreakpoint || !isMobileLayoutLocked}
+        isResizable={!isMobileBreakpoint || !isMobileLayoutLocked}
+        resizeHandles={isMobileBreakpoint ? ["s"] : ["se"]}
         onDragStart={(_layout, oldItem) => {
           dragSnapshotRef.current = {
             desktop: normalizeFacultyLayout(widgets),
@@ -563,8 +614,21 @@ function FacultyDashboard() {
         preventCollision={false}
       >
         {widgets.map((widget) => (
-          <div key={widget.i} style={!layoutReady ? { display: "none" } : undefined}>
-            <FacultyWidgetCard widget={widget} onRemove={handleRemoveWidget} data={dashboardData} />
+          <div
+            key={widget.i}
+            style={!layoutReady ? { display: "none" } : undefined}
+            className={isMobileBreakpoint && isMobileLayoutLocked ? "mobile-locked-item" : undefined}
+          >
+            <FacultyWidgetCard
+              widget={widget}
+              onRemove={handleRemoveWidget}
+              data={dashboardData}
+              showMoveControls={isMobileBreakpoint && isMobileLayoutLocked}
+              canMoveUp={(mobileOrderIndexMap.get(widget.i) ?? 0) > 0}
+              canMoveDown={(mobileOrderIndexMap.get(widget.i) ?? -1) >= 0 && (mobileOrderIndexMap.get(widget.i) ?? -1) < orderedMobileWidgetIds.length - 1}
+              onMoveUp={() => moveMobileWidget(widget.i, "up")}
+              onMoveDown={() => moveMobileWidget(widget.i, "down")}
+            />
           </div>
         ))}
       </ResponsiveGridLayout>
