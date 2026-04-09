@@ -118,7 +118,7 @@ def create_app():
             return None
 
         path = request.path.rstrip('/') or '/'
-        protected_prefixes = ('/api', '/attendance', '/health', '/static')
+        protected_prefixes = ('/api', '/attendance', '/health', '/static', '/assets')
         if any(path == prefix or path.startswith(f'{prefix}/') for prefix in protected_prefixes):
             return None
 
@@ -132,9 +132,14 @@ def create_app():
     def root():
         return _serve_react_index()
 
+    @app.route('/assets/<path:filename>')
+    def react_assets(filename):
+        assets_dir = os.path.join(react_dist, 'assets')
+        return send_from_directory(assets_dir, filename)
+
     @app.route('/<path:path>')
     def spa_catch_all(path):
-        protected_prefixes = ('api', 'attendance', 'admin', 'student', 'health', 'static')
+        protected_prefixes = ('api', 'attendance', 'admin', 'student', 'health', 'static', 'assets')
         if any(path == prefix or path.startswith(f'{prefix}/') for prefix in protected_prefixes):
             abort(404)
 

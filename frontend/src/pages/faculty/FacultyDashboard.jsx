@@ -107,6 +107,26 @@ function FacultyDashboard() {
       return nextItem;
     });
   }
+
+  function stackMobileByOrder(items) {
+    const ordered = normalizeFacultyLayout(items || []);
+    let nextY = 0;
+
+    return ordered.map((item) => {
+      const nextItem = {
+        ...item,
+        x: 0,
+        y: nextY,
+        w: 6,
+        minW: 6,
+        maxW: 6,
+        h: Math.max(2, Number(item.h || 3)),
+        minH: Math.max(2, Number(item.minH || 2)),
+      };
+      nextY += nextItem.h;
+      return nextItem;
+    });
+  }
   function rectanglesOverlap(first, second) {
     return !(
       first.x + first.w <= second.x ||
@@ -467,6 +487,17 @@ function FacultyDashboard() {
   const gridClassName =
     "faculty-widget-grid" + (isMobileBreakpoint && !isMobileLayoutLocked ? " mobile-unlocked" : " mobile-locked");
 
+  const renderedWidgets = useMemo(() => {
+    if (!isMobileBreakpoint) return widgets;
+    const normalizedMobile = normalizeMobileStack(mobileWidgets);
+    const desktopById = new Map(widgets.map((item) => [item.i, item]));
+
+    return normalizedMobile.map((mobileItem) => ({
+      ...(desktopById.get(mobileItem.i) || mobileItem),
+      ...mobileItem,
+    }));
+  }, [isMobileBreakpoint, mobileWidgets, widgets]);
+
   const moveMobileWidget = (widgetId, direction) => {
     const ordered = normalizeMobileStack(mobileWidgets);
     const fromIndex = ordered.findIndex((item) => item.i === widgetId);
@@ -478,7 +509,7 @@ function FacultyDashboard() {
     const next = [...ordered];
     const [moving] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, moving);
-    setMobileWidgets(normalizeMobileStack(next));
+    setMobileWidgets(stackMobileByOrder(next));
   };
 
   useEffect(() => {
@@ -541,7 +572,7 @@ function FacultyDashboard() {
         containerPadding={[0, 0]}
         draggableHandle={isMobileBreakpoint ? ".faculty-widget-card" : ".widget-drag-handle"}
         draggableCancel=".widget-remove-btn, .widget-add-trigger, button, input, textarea, select, a, .calendar-day-btn, .calendar-arrow"
-        isDraggable={!isMobileBreakpoint || !isMobileLayoutLocked}
+        isDraggable={!isMobileBreakpoint}
         isResizable={!isMobileBreakpoint || !isMobileLayoutLocked}
         resizeHandles={isMobileBreakpoint ? ["s"] : ["se"]}
         onDragStart={(_layout, oldItem) => {
@@ -613,7 +644,7 @@ function FacultyDashboard() {
         compactType={null}
         preventCollision={false}
       >
-        {widgets.map((widget) => (
+        {renderedWidgets.map((widget) => (
           <div
             key={widget.i}
             style={!layoutReady ? { display: "none" } : undefined}
