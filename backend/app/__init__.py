@@ -1,4 +1,4 @@
-from flask import Flask, abort, redirect, send_from_directory, url_for
+from flask import Flask, abort, redirect, request, send_from_directory, url_for
 from flask_cors import CORS
 from flask_session import Session
 import os
@@ -97,12 +97,40 @@ def create_app():
         os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'frontend', 'dist')),
     )
 
+    react_route_prefixes = (
+        '/',
+        '/login',
+        '/multilogin',
+        '/admin',
+        '/faculty',
+        '/student',
+    )
+
+    def _serve_react_index():
+        index_path = os.path.join(react_dist, 'index.html')
+        if os.path.exists(index_path):
+            return send_from_directory(react_dist, 'index.html')
+        return redirect(url_for('faculty.home'))
+
+    @app.before_request
+    def serve_react_for_frontend_routes():
+        if request.method not in ('GET', 'HEAD'):
+            return None
+
+        path = request.path.rstrip('/') or '/'
+        protected_prefixes = ('/api', '/attendance', '/health', '/static')
+        if any(path == prefix or path.startswith(f'{prefix}/') for prefix in protected_prefixes):
+            return None
+
+        if path == '/' or any(path == prefix or path.startswith(f'{prefix}/') for prefix in react_route_prefixes[1:]):
+            return _serve_react_index()
+
+        return None
+
     # Root route
     @app.route('/')
     def root():
-        if os.path.exists(os.path.join(react_dist, 'index.html')):
-            return send_from_directory(react_dist, 'index.html')
-        return redirect(url_for('faculty.home'))
+        return _serve_react_index()
 
     @app.route('/<path:path>')
     def spa_catch_all(path):
