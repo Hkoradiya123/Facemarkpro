@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80" role="img" aria-labelledby="title">
+  <title>FaceMark Pro</title>
+  <style>
+    .text { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; font-size: 46px; font-weight: 800; letter-spacing: 0.4px; }
+    .dark { fill: #1f2937; }
+    .accent { fill: #1976d2; }
+  </style>
+  <rect width="320" height="80" fill="none"/>
+  <text class="text" x="10" y="56" fill="#1f2937">FaceMark</text>
+  <text class="text accent" x="206" y="56">Pro</text>
+</svg>

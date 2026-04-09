@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Profile</title>
+  <!-- CSS Libraries -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='dashboard.css') }}" rel="stylesheet">
+  <style>
+    /* Match dashboard sidebar sizing + theming */
+    :root {
+      --sidebar-width: 280px;
+      --content-max-width: min(95vw, clamp(680px, 70vw, 1000px));
+      --primary: #4a90e2;
+
+      /* Dashboard-like tokens (light defaults) */
+      --card-bg: #f5f6fa;
+      --text-color: #333333;
+      --sidebar-bg: #f8f9fa;
+      --input-border: #e0e0e0;
+
+      /* Used by sidebar partial */
+      --text: var(--text-color);
+      --muted: rgba(85, 96, 112, 0.9);
+      --border: rgba(0, 0, 0, 0.08);
+
+      --success-bg: #e8f5e9;
+      --error-bg: #ffebee;
+      --info-bg: rgba(79, 172, 254, .12);
+    }
+
+    body.dark {
+      --card-bg: #23272f;
+      --text-color: #e0e0e0;
+      --sidebar-bg: #181c24;
+      --input-border: #333;
+      --text: var(--text-color);
+      --muted: rgba(219, 234, 254, 0.85);
+      --border: rgba(255, 255, 255, .10);
+      --success-bg: #1b5e20;
+      --error-bg: #b71c1c;
+    }
+
+    /* =========================
+   BASE
+========================= */
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--text-color);
+      background: var(--card-bg);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Force scroll on mobile */
+    @media (max-width: 768px) {
+
+      html,
+      body {
+        height: auto !important;
+        overflow-y: auto !important;
+      }
+    }
+
+    /* =========================
+   SIDEBAR (Dashboard-style)
+========================= */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      padding: 24px 20px;
+      box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08), 0 0 40px rgba(0, 0, 0, 0.04);
+      border-right: 1px solid rgba(0, 0, 0, 0.06);
+      z-index: 1200;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+
+    body.dark .sidebar {
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.2);
+      border-right-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Sidebar Brand */
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0 16px 0;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-brand .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .sidebar-brand .brand-title {
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      font-size: 16px;
+      color: var(--text-color);
+    }
+
+    .sidebar-brand .brand-title .accent {
+      color: var(--primary);
+    }
+
+    .sidebar-brand .brand-subtitle {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(85, 96, 112, 0.9);
+      margin-top: 3px;
+    }
+
+    body.dark .sidebar-brand .brand-subtitle {
+      color: rgba(219, 234, 254, 0.85);
+    }
+
+    /* Profile Section */
+    .profile-section {
+      text-align: left;
+      padding: 14px 0 18px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      margin-bottom: 18px;
+    }
+
+    body.dark .profile-section {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .profile-header-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-photo {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      transition: all 0.3s ease;
+    }
+
+    .profile-photo:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    }
+
+    body.dark .profile-photo {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .profile-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      max-width: 170px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Nav Links */
+    .nav-links ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      color: var(--text-color);
+      text-decoration: none;
+      border-radius: 12px;
+      margin-bottom: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .nav-link:hover {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.12) 100%);
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .nav-link:hover::before {
+      transform: scaleY(1);
+    }
+
+    .nav-link i {
+      margin-right: 12px;
+      width: 20px;
+      font-size: 16px;
+      color: #64748b;
+      transition: all 0.3s ease;
+    }
+
+    body.dark .nav-link i {
+      color: #94a3b8;
+    }
+
+    .nav-link:hover i {
+      color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    .nav-link.active {
+      background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+      color: #ffffff !important;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+      transform: translateX(2px);
+    }
+
+    .nav-link.active::before {
+      transform: scaleY(1);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-link.active i {
+      color: #ffffff !important;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      position: absolute;
+      bottom: 24px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    body.dark .sidebar-footer {
+      border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .nav-link.text-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff !important;
+    }
+
+    .nav-link.text-danger:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    }
+
+    .nav-link.text-danger i {
+      color: #ffffff !important;
+    }
+
+    /* =========================
+   MAIN CONTENT
+========================= */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      transition: margin-left .3s ease;
+    }
+
+    /* Mobile header */
+    .mobile-header {
+      display: none;
+      position: fixed;
+      inset: 0 0 auto 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      z-index: 1100;
+      padding: 12px 16px;
+    }
+
+    /* Bootstrap-style responsive utilities */
+    .d-md-none {
+      display: none !important;
+    }
+
+    @media (max-width: 768px) {
+      .d-md-none {
+        display: flex !important;
+      }
+    }
+
+    /* =========================
+   PROFILE LAYOUT
+========================= */
+    .profile-content {
+      max-width: var(--content-max-width);
+      margin: 0 auto;
+      padding: clamp(20px, 3vw, 32px) clamp(16px, 3vw, 32px);
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: minmax(200px, 280px) 1fr;
+      gap: clamp(16px, 3vw, 24px);
+      align-items: start;
+    }
+
+    /* Photo */
+    .profile-photo-section {
+      text-align: center;
+      position: sticky;
+      top: 80px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .profile-photo-large {
+      width: clamp(120px, 15vw, 180px);
+      height: clamp(120px, 15vw, 180px);
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid rgba(59, 130, 246, 0.3);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .profile-photo-large:hover {
+      transform: scale(1.05);
+      box-shadow: 0 16px 50px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    body.dark .profile-photo-large {
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .photo-upload-btn,
+    .action-btn,
+    .modal-btn {
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: white;
+      background: linear-gradient(135deg, #1f2937, #111827);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+    }
+
+    .photo-upload-btn:hover,
+    .action-btn:hover,
+    .modal-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+    }
+
+    .photo-upload-btn {
+      width: 100%;
+      justify-content: center;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, #111827, #1f2937);
+    }
+
+    .action-btn.secondary {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+    }
+
+    .action-btn.danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .modal-btn {
+      background: linear-gradient(135deg, #1f2937, #0f172a);
+    }
+
+    .modal-btn.primary {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+    }
+
+    .modal-btn.secondary {
+      background: linear-gradient(135deg, #374151, #1f2937);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+
+    /* Details Card */
+    .profile-details-section {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: clamp(16px, 2.5vw, 24px);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark .profile-details-section {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.3) 100%);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-details-title {
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      color: var(--text-color);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+      font-weight: 700;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .profile-details-title i {
+      color: #3b82f6;
+      font-size: 1.3rem;
+    }
+
+    /* Info grid */
+    .profile-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      gap: clamp(12px, 2vw, 16px);
+    }
+
+    .info-card {
+      background: rgba(59, 130, 246, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: clamp(12px, 2vw, 16px);
+      transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    body.dark .info-card {
+      background: rgba(30, 41, 59, 0.3);
+    }
+
+    body.dark .info-card:hover {
+      background: rgba(30, 41, 59, 0.5);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .info-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .info-label i {
+      color: #3b82f6;
+      font-size: 0.9rem;
+    }
+
+    .info-value {
+      margin-top: 8px;
+      font-weight: 600;
+      word-break: break-word;
+      color: var(--text-color);
+      font-size: 0.95rem;
+    }
+
+    /* Actions */
+    .profile-actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* =========================
+   ALERTS
+========================= */
+    .alert-custom {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid;
+      margin-bottom: 16px;
+    }
+
+    .alert-success {
+      background: var(--success-bg);
+      border-color: #4caf50
+    }
+
+    .alert-error {
+      background: var(--error-bg);
+      border-color: #f44336
+    }
+
+    .alert-info {
+      background: var(--info-bg);
+      border-color: #60a5fa
+    }
+
+    /* =========================
+   MODALS
+========================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 500px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    body.dark .modal-content {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-title i {
+      color: #3b82f6;
+    }
+
+    .modal-close {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: #ef4444;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(239, 68, 68, 0.2);
+      transform: scale(1.1);
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-color);
+      font-size: 0.95rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-color);
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    body.dark .form-input {
+      background: rgba(30, 41, 59, 0.4);
+    }
+
+    body.dark .form-input:focus {
+      background: rgba(30, 41, 59, 0.6);
+    }
+
+    /* Cropper Modal */
+    .cropper-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 1);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3600;
+      padding: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .cropper-modal.active {
+      display: flex;
+    }
+
+    .cropper-container {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: min(95vw, 800px);
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: slideUp 0.3s ease;
+    }
+
+    body.dark .cropper-container {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(0, 0, 0, 0.95) 100%);
+    }
+
+    .cropper-image-wrapper {
+      width: 100%;
+      max-height: 65vh;
+      background: #0f172a;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .cropper-image {
+      width: 100%;
+      max-height: 65vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    .cropper-actions {
+      margin-top: 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .cropper-actions .modal-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 14px 24px;
+      font-size: 1rem;
+    }
+
+    /* Mobile Cropper Adjustments */
+    @media (max-width: 768px) {
+      .cropper-modal {
+        padding: 12px;
+      }
+
+      .cropper-container {
+        padding: 16px;
+        max-width: 100%;
+      }
+
+      .cropper-image-wrapper {
+        max-height: 55vh;
+      }
+
+      .cropper-image {
+        max-height: 55vh;
+      }
+
+      .cropper-actions {
+        flex-direction: column;
+      }
+
+      .cropper-actions .modal-btn {
+        width: 100%;
+        min-width: auto;
+      }
+    }
+
+    /* Photo Viewer */
+    .photo-viewer {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 1);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3500;
+      padding: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .photo-viewer.active {
+      display: flex;
+    }
+
+    .photo-viewer-content {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+      max-width: min(95vw, 600px);
+      width: 100%;
+      animation: slideUp 0.3s ease;
+    }
+
+    body.dark .photo-viewer-content {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(0, 0, 0, 0.95) 100%);
+    }
+
+    .photo-viewer-image {
+      width: 100%;
+      height: auto;
+      max-height: 60vh;
+      border-radius: 16px;
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      object-fit: contain;
+      background: #0f172a;
+    }
+
+    .photo-viewer-actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .photo-viewer-actions .modal-btn {
+      flex: 1;
+    }
+
+    @media (max-width: 768px) {
+      .photo-viewer {
+        padding: 12px;
+      }
+
+      .photo-viewer-content {
+        padding: 16px;
+      }
+
+      .photo-viewer-image {
+        max-height: 50vh;
+      }
+
+      .photo-viewer-actions {
+        flex-direction: column;
+      }
+
+      .photo-viewer-actions .modal-btn {
+        width: 100%;
+      }
+    }
+
+    /* =========================
+   LOADING
+========================= */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 4000;
+    }
+
+    .loading-overlay.active {
+      display: flex
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, .3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        width: 260px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding-top: 90px;
+        overflow-y: auto;
+      }
+
+      .mobile-header {
+        display: block;
+      }
+
+      .profile-content {
+        padding: 16px 12px;
+      }
+
+      .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .profile-photo-section {
+        position: static;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .profile-photo-large {
+        width: 140px;
+        height: 140px;
+      }
+
+      .profile-details-section {
+        padding: 16px;
+      }
+
+      .profile-details-title {
+        font-size: 1.2rem;
+      }
+
+      .profile-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .info-card {
+        padding: 14px;
+      }
+
+      .profile-actions,
+      .modal-actions {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .action-btn,
+      .photo-upload-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+        font-size: 1rem;
+      }
+
+      .modal-content {
+        max-width: 95vw;
+        margin: 20px;
+        padding: 20px;
+      }
+
+      .modal-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px;
+      }
+
+      .btn {
+        justify-content: center;
+        width: 100%;
+        padding: 14px;
+      }
+    }
+
+    /* Tablet Styles */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .profile-grid {
+        grid-template-columns: 240px 1fr;
+        gap: 20px;
+      }
+
+      .profile-photo-large {
+        width: 140px;
+        height: 140px;
+      }
+
+      .profile-info-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+    }
+
+    /* Large Desktop */
+    @media (min-width: 1400px) {
+      .profile-content {
+        max-width: 1200px;
+      }
+
+      .profile-info-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* Small Mobile */
+    @media (max-width: 480px) {
+      .profile-content {
+        padding: 12px 8px;
+      }
+
+      .profile-photo-large {
+        width: 120px;
+        height: 120px;
+      }
+
+      .profile-details-section {
+        padding: 12px;
+      }
+
+      .info-card {
+        padding: 12px;
+      }
+
+      .info-label {
+        font-size: 0.7rem;
+      }
+
+      .info-value {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Theme Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked+.slider {
+      background-color: var(--primary);
+    }
+
+    input:checked+.slider:before {
+      transform: translateX(22px);
+    }
+
+    /* ================================
+   HARD FIX: SOLID CROPPER BACKGROUND
+   ================================ */
+    .cropper-modal {
+      background: rgba(0, 0, 0, 0.98) !important;
+    }
+
+    .cropper-container,
+    .cropper-wrap-box,
+    .cropper-canvas,
+    .cropper-drag-box,
+    .cropper-bg,
+    .cropper-view-box {
+      background-color: #0b1220 !important;
+      opacity: 1 !important;
+      backdrop-filter: none !important;
+    }
+
+    .cropper-face {
+      background-color: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .cropper-modal * {
+      filter: none !important;
+    }
+
+    .cropper-container img {
+      max-width: 100% !important;
+      max-height: 70vh !important;
+    }
+  </style>
+</head>
+
+<body class="light">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Facemark Pro logo">
+      <div class="brand-text">
+        <div class="brand-title"><span>FaceMark</span><span class="accent">Pro</span></div>
+        <p class="brand-subtitle">Your face is your Attendance</p>
+      </div>
+    </div>
+    <div class="profile-section">
+      <div class="profile-header-row">
+        <a href="{{ url_for('faculty.profile') }}" style="display:inline-block;">
+          <img src="{{ photo_path }}" alt="Profile Photo" class="profile-photo" style="cursor:pointer;">
+        </a>
+        <h5 class="profile-name">{{ faculty_name|title }}</h5>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <ul class="nav-links">
+        <li><a href="{{ url_for('faculty.dashboard') }}"
+            class="nav-link{% if request.path == url_for('faculty.dashboard') %} active{% endif %}"><i
+              class="fas fa-home"></i> Dashboard</a></li>
+        <li><a href="{{ url_for('attendance.attendance') }}"
+            class="nav-link{% if request.path == url_for('attendance.attendance') %} active{% endif %}"><i
+              class="fas fa-calendar-check"></i> Attendance</a></li>
+        <li><a href="{{ url_for('attendance.manual_attendance') }}"
+            class="nav-link{% if request.path == url_for('attendance.manual_attendance') %} active{% endif %}"><i
+              class="fas fa-user-check"></i> Manual Attendance</a></li>
+        <li><a href="{{ url_for('faculty.reports') }}"
+            class="nav-link{% if request.path == url_for('faculty.reports') %} active{% endif %}"><i
+              class="fas fa-chart-line"></i> Reports</a></li>
+        {% if is_admin %}
+        <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"><i class="fas fa-user-shield"></i> Admin
+            Dashboard</a></li>
+        {% endif %}
+      </ul>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="/logout" class="nav-link text-danger">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+      </a>
+      <label class="switch">
+        <input type="checkbox" class="theme-switch-checkbox">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Mobile Header -->
+  <div class="d-md-none"
+    style="position:fixed; top:0; left:0; width:100%; z-index:1100; background: var(--card-bg); padding: 10px 12px; border-bottom:1px solid var(--input-border); display:flex; align-items:center; gap:8px;">
+    <button id="sidebarToggle" class="btn btn-outline-primary"
+      style="padding: 4px 8px !important; width: auto !important; font-size: 1rem; height: auto !important;"
+      aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+    <div style="font-weight:800; letter-spacing:0.3px; display:flex; align-items:center; gap:3px;">
+      <div style="display:flex; align-items:center; gap:3px;">
+        <span>FaceMark</span><span style="color: var(--primary);">Pro</span>
+      </div>
+      <span style="font-size:0.8rem; color:#556070; margin-left:6px;">Facial Recognition Attendance</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <div class="profile-content">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div
+        class="alert-custom alert-{{ 'success' if category=='success' else 'error' if category=='error' else 'info' }}"
+        style="justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <i
+            class="fas fa-{{ 'check-circle' if category=='success' else 'exclamation-triangle' if category=='error' else 'info-circle' }} alert-icon"></i>
+          <span>{{ message }}</span>
+        </div>
+        <button onclick="this.closest('.alert-custom').remove()"
+          style="background: none; border: none; cursor: pointer; color: inherit; padding: 0 5px; font-size: 1.1rem; opacity: 0.7;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
+
+      <!-- Profile Grid -->
+      <div class="profile-grid">
+        <!-- Photo Section -->
+        <div class="profile-photo-section">
+          <img src="{{ photo_path }}" alt="Profile Photo" class="profile-photo-large" id="profilePhotoPreview">
+
+          <!-- Simple Photo Upload Form -->
+          <form method="POST" action="{{ url_for('faculty.upload_profile_photo') }}" enctype="multipart/form-data"
+            id="photoUploadForm">
+            <input type="file" id="photoInput" name="photo" class="file-input" accept="image/*"
+              onchange="previewAndSubmit(this)">
+            <button type="button" class="photo-upload-btn" onclick="document.getElementById('photoInput').click()">
+              <i class="fas fa-camera"></i> Change Photo
+            </button>
+          </form>
+        </div>
+
+        <!-- Details Section -->
+        <div class="profile-details-section">
+          <h2 class="profile-details-title">
+            <i class="fas fa-user-circle"></i>
+            Profile Information
+          </h2>
+
+          <div class="profile-info-grid">
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-user"></i>
+                Full Name
+              </div>
+              <div class="info-value">{{ faculty_name }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-envelope"></i>
+                Email Address
+              </div>
+              <div class="info-value">{{ faculty_email }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-user-tie"></i>
+                Role
+              </div>
+              <div class="info-value">{{ role }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-building"></i>
+                Department
+              </div>
+              <div class="info-value">{{ department }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-id-badge"></i>
+                Faculty ID
+              </div>
+              <div class="info-value">{{ faculty_id or 'N/A' }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-phone"></i>
+                Phone
+              </div>
+              <div class="info-value">{{ phone or 'N/A' }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-calendar-alt"></i>
+                Joined Date
+              </div>
+              <div class="info-value">{{ joined_date or 'N/A' }}</div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-label">
+                <i class="fas fa-graduation-cap"></i>
+                Qualification
+              </div>
+              <div class="info-value">{{ qualification or 'N/A' }}</div>
+            </div>
+
+            <div class="info-card" style="grid-column: span 2;">
+              <div class="info-label">
+                <i class="fas fa-map-marker-alt"></i>
+                Address
+              </div>
+              <div class="info-value">{{ address or 'N/A' }}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="profile-actions">
+            <button type="button" class="action-btn secondary" onclick="openEditInfoModal()">
+              <i class="fas fa-edit"></i>
+              Edit Information
+            </button>
+            <button type="button" class="action-btn" onclick="openChangePasswordModal()">
+              <i class="fas fa-key"></i>
+              Change Password
+            </button>
+            <a href="{{ url_for('faculty.dashboard') }}" class="action-btn danger">
+              <i class="fas fa-arrow-left"></i>
+              Back to Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <!-- Change Password Modal -->
+  <div class="modal-overlay" id="changePasswordModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-key"></i>
+          Change Password
+        </h3>
+        <button type="button" class="modal-close" onclick="closeChangePasswordModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="{{ url_for('faculty.change_password') }}"
+        onsubmit="return submitChangePassword(this)">
+        <div class="form-group">
+          <label class="form-label" for="current_password">Current Password</label>
+          <input type="password" class="form-input" name="current_password" id="current_password" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="new_password">New Password</label>
+          <input type="password" class="form-input" name="new_password" id="new_password" required>
+        </div>
+
+        <input type="hidden" name="email" value="{{ faculty_email }}">
+
+        <div class="modal-actions">
+          <button type="button" class="modal-btn secondary" onclick="closeChangePasswordModal()">Cancel</button>
+          <button type="submit" class="modal-btn primary">
+            <i class="fas fa-save"></i>
+            Update Password
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Info Modal -->
+  <div class="modal-overlay" id="editInfoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-edit"></i>
+          Edit Faculty Information
+        </h3>
+        <button type="button" class="modal-close" onclick="closeEditInfoModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form method="POST" action="{{ url_for('faculty.edit_faculty_info') }}" onsubmit="return submitEditInfo(this)">
+        <div class="form-group">
+          <label class="form-label" for="edit_phone">Phone Number</label>
+          <input type="text" class="form-input" name="phone" id="edit_phone" value="{{ phone }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit_qualification">Qualification</label>
+          <input type="text" class="form-input" name="qualification" id="edit_qualification" value="{{ qualification }}"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit_address">Address</label>
+          <input type="text" class="form-input" name="address" id="edit_address" value="{{ address }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit_password">Confirm Password</label>
+          <input type="password" class="form-input" name="password" id="edit_password" required>
+        </div>
+
+        <input type="hidden" name="email" value="{{ faculty_email }}">
+
+        <div class="modal-actions">
+          <button type="button" class="modal-btn secondary" onclick="closeEditInfoModal()">Cancel</button>
+          <button type="submit" class="modal-btn primary">
+            <i class="fas fa-save"></i>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Photo Viewer -->
+  <div class="photo-viewer" id="photoViewer">
+    <div class="photo-viewer-content">
+      <img id="photoViewerImg" src="{{ photo_path }}" alt="Profile photo preview" class="photo-viewer-image">
+      <div class="modal-actions photo-viewer-actions">
+        <button type="button" class="modal-btn secondary" id="photoViewerChangeBtn">
+          <i class="fas fa-camera"></i>
+          Change Photo
+        </button>
+        <button type="button" class="modal-btn" id="photoViewerCloseBtn">
+          <i class="fas fa-times"></i>
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Sidebar toggle and theme handled in sidebar partial
+
+    // Modal Functions
+    function openChangePasswordModal() {
+      document.getElementById('changePasswordModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function openEditInfoModal() {
+      document.getElementById('editInfoModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditInfoModal() {
+      document.getElementById('editInfoModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Form Submission Functions
+    function submitChangePassword(form) {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      closeChangePasswordModal();
+      return true;
+    }
+
+    function submitEditInfo(form) {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      closeEditInfoModal();
+      return true;
+    }
+
+    // Simple Photo Upload with Preview
+    function previewAndSubmit(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file');
+        input.value = '';
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size must be less than 5MB');
+        input.value = '';
+        return;
+      }
+
+      // Preview the image
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const preview = document.getElementById('profilePhotoPreview');
+        if (preview) {
+          preview.src = e.target.result;
+        }
+      };
+      reader.readAsDataURL(file);
+
+      // Show loading overlay
+      const loading = document.getElementById('loadingOverlay');
+      if (loading) {
+        loading.style.display = 'flex';
+      }
+
+      // Auto-submit the form
+      const form = document.getElementById('photoUploadForm');
+      if (form) {
+        form.submit();
+      }
+    }
+
+    // Photo viewer (click to enlarge, Esc to close)
+    (function () {
+      const photo = document.getElementById('profilePhotoPreview');
+      const viewer = document.getElementById('photoViewer');
+      const viewerImg = document.getElementById('photoViewerImg');
+      const closeBtn = document.getElementById('photoViewerCloseBtn');
+      const changeBtn = document.getElementById('photoViewerChangeBtn');
+      const fileInput = document.getElementById('photoInput');
+
+      function closeViewer() {
+        if (viewer) viewer.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      function openViewer() {
+        if (!viewer) return;
+        if (viewerImg && photo) viewerImg.src = photo.src;
+        viewer.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      if (photo) photo.addEventListener('click', openViewer);
+      if (closeBtn) closeBtn.addEventListener('click', closeViewer);
+      if (viewer) viewer.addEventListener('click', function (e) {
+        if (e.target === viewer) closeViewer();
+      });
+      if (changeBtn) changeBtn.addEventListener('click', function () {
+        closeViewer();
+        if (fileInput) fileInput.click();
+      });
+      document.addEventListener('keydown', function (e) {
+        const cropperModal = document.getElementById('cropperModal');
+        if (cropperModal && cropperModal.classList.contains('active')) return;
+        if (e.key === 'Escape') closeViewer();
+      });
+    })();
+
+    // Responsive adjustments
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 768) {
+        if (typeof sidebar !== 'undefined' && sidebar) sidebar.classList.remove('open');
+        if (typeof mainContent !== 'undefined' && mainContent) mainContent.classList.remove('expanded');
+      }
+    });
+
+    // Theme Toggle
+    (function () {
+      const themeToggle = document.querySelector('.theme-switch-checkbox');
+      const body = document.body;
+
+      // Load saved theme
+      const savedTheme = localStorage.getItem('fm-theme');
+      if (savedTheme === 'dark') {
+        body.classList.remove('light');
+        body.classList.add('dark');
+        if (themeToggle) themeToggle.checked = true;
+      }
+
+      // Toggle theme
+      if (themeToggle) {
+        themeToggle.addEventListener('change', function () {
+          if (this.checked) {
+            body.classList.remove('light');
+            body.classList.add('dark');
+            localStorage.setItem('fm-theme', 'dark');
+          } else {
+            body.classList.remove('dark');
+            body.classList.add('light');
+            localStorage.setItem('fm-theme', 'light');
+          }
+        });
+      }
+    })();
+
+    // Mobile Sidebar Toggle
+    (function () {
+      const sidebarEl = document.querySelector('.sidebar');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+
+      if (sidebarToggle && sidebarEl) {
+        sidebarToggle.addEventListener('click', function () {
+          sidebarEl.classList.toggle('open');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function (e) {
+          if (window.innerWidth <= 768) {
+            if (!sidebarEl.contains(e.target) && !sidebarToggle.contains(e.target)) {
+              sidebarEl.classList.remove('open');
+            }
+          }
+        });
+      }
+
+      // expose safe names used elsewhere
+      window.sidebar = sidebarEl;
+      window.mainContent = document.getElementById('mainContent');
+    })();
+  </script>
+</body>
+
+</html>

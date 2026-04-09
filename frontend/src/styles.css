@@ -1,0 +1,8 @@
+@import "./styles/01-base.css";
+@import "./styles/02-faculty-profile.css";
+@import "./styles/03-login-and-lecture.css";
+@import "./styles/04-dashboard-widgets.css";
+@import "./styles/05-attendance-pages.css";
+@import "./styles/06-admin-shared.css";
+@import "./styles/07-reports-theme-dark.css";
+@import "./styles/08-responsive.css";

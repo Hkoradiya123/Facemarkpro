@@ -1,0 +1,177 @@
+<!-- Reusable sidebar partial -->
+<!-- Expects `faculty_name` and `photo_path` in template context -->
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+  <div class="mobile-header-content">
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div>
+      <div class="mobile-title">Faculty Profile</div>
+      <div class="mobile-subtitle">{{ faculty_name }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <style>
+    /* Sidebar brand + profile header */
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0 16px 0;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    body.dark .sidebar-brand {
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-brand .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .sidebar-brand .brand-title {
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      font-size: 16px;
+      color: var(--text, var(--text-color, #333));
+    }
+
+    .sidebar-brand .brand-title .accent {
+      color: var(--primary, var(--primary-color, #4a90e2));
+    }
+
+    .sidebar-brand .brand-subtitle {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted, rgba(85, 96, 112, 0.9));
+      margin-top: 3px;
+    }
+
+    .profile-section {
+      text-align: left;
+      padding: 18px 0 20px 0;
+      margin-bottom: 18px;
+    }
+
+    .profile-header-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .profile-photo {
+      border-radius: 50% !important;
+    }
+
+    .profile-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--text, var(--text-color, #333));
+      letter-spacing: 0.2px;
+      max-width: 170px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Ensure nav items are readable on dark sidebars too */
+    .sidebar .nav-link {
+      color: var(--text, var(--text-color, #333));
+    }
+
+    .sidebar .nav-link i {
+      color: currentColor;
+      opacity: 0.85;
+    }
+
+    .sidebar .nav-link:hover i,
+    .sidebar .nav-link.active i {
+      opacity: 1;
+    }
+  </style>
+
+  <div class="sidebar-brand">
+    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Facemark Pro logo">
+    <div class="brand-text">
+      <div class="brand-title"><span>FaceMark</span><span class="accent">Pro</span></div>
+      <div class="brand-subtitle">Your face is your Attendance</div>
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <div class="profile-header-row">
+      <img src="{{ photo_path }}" alt="Profile Photo" class="profile-photo">
+      <h5 class="profile-name">{{ faculty_name|title }}</h5>
+    </div>
+  </div>
+
+  <div class="nav-links">
+    <ul>
+      <li><a href="{{ url_for('faculty.dashboard') }}" class="nav-link"><i
+            class="fas fa-home"></i><span>Dashboard</span></a></li>
+      <li><a href="{{ url_for('attendance.attendance') }}" class="nav-link"><i
+            class="fas fa-calendar-check"></i><span>Attendance</span></a></li>
+      <li><a href="{{ url_for('students.students') }}" class="nav-link"><i
+            class="fas fa-user-graduate"></i><span>Students</span></a></li>
+      <li><a href="{{ url_for('students.student_timetable') }}" class="nav-link"><i
+            class="fas fa-clock"></i><span>Timetable</span></a></li>
+      <li><a href="{{ url_for('faculty.reports') }}" class="nav-link"><i
+            class="fas fa-chart-bar"></i><span>Reports</span></a></li>
+      <li><a href="{{ url_for('faculty.profile') }}" class="nav-link active"><i
+            class="fas fa-user"></i><span>Profile</span></a></li>
+    </ul>
+  </div>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('faculty.logout') }}" class="nav-link logout-link">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </a>
+    <div class="theme-toggle-wrapper">
+      <label class="switch">
+        <input type="checkbox" id="themeToggle">
+        <span class="slider round"></span>
+      </label>
+    </div>
+  </div>
+</aside>
+
+<script>
+  (function () {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    if (sidebarToggle) sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      document.getElementById('mainContent')?.classList.toggle('expanded');
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('fm-theme');
+    if (saved === 'dark') document.body.classList.add('dark');
+    if (themeToggle) {
+      themeToggle.checked = document.body.classList.contains('dark');
+      themeToggle.addEventListener('change', () => {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('fm-theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+      });
+    }
+  })();
+</script>

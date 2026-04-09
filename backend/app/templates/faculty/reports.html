@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='dashboard.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --card-bg: #f5f6fa;
+            --text-color: #333333;
+            --sidebar-width: 280px;
+            --sidebar-bg: #f8f9fa;
+            --input-border: #e0e0e0;
+            --panel-bg: #ffffff;
+            --panel-border: #e9ecef;
+        }
+
+        body.dark {
+            --card-bg: #23272f;
+            --text-color: #e0e0e0;
+            --sidebar-bg: #181c24;
+            --input-border: #333;
+            --panel-bg: #111827;
+            --panel-border: #1f2937;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--sidebar-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 24px;
+            min-height: 100vh;
+            background: var(--card-bg);
+        }
+
+        /* Sidebar styling aligned with manual attendance */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            padding: 24px 20px;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08), 0 0 40px rgba(0, 0, 0, 0.04);
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+            z-index: 1200;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+        }
+
+        body.dark .sidebar {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3), 0 0 40px rgba(0, 0, 0, 0.2);
+            border-right-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0 16px 0;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-brand img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .sidebar-brand .brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .sidebar-brand .brand-title {
+            font-weight: 900;
+            letter-spacing: 0.2px;
+            font-size: 16px;
+            color: var(--text-color);
+        }
+
+        .sidebar-brand .brand-title .accent {
+            color: var(--primary-color);
+        }
+
+        .sidebar-brand .brand-subtitle {
+            margin: 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(85, 96, 112, 0.9);
+            margin-top: 3px;
+        }
+
+        body.dark .sidebar-brand .brand-subtitle {
+            color: rgba(219, 234, 254, 0.85);
+        }
+
+        .profile-section {
+            padding: 20px 0 24px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            margin-bottom: 24px;
+        }
+
+        body.dark .profile-section {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-header-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .profile-photo {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .profile-photo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+
+        body.dark .profile-photo {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0;
+            letter-spacing: 0.3px;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-email {
+            font-size: 11px;
+            font-weight: 500;
+            color: #666;
+            margin: 4px 0 0 0;
+            letter-spacing: 0.1px;
+            word-break: break-all;
+            line-height: 1.3;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        body.dark .profile-email {
+            color: #aaa;
+        }
+
+        @media (max-width: 992px) {
+            .profile-email {
+                display: none;
+            }
+        }
+
+        .nav-links ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.12) 100%);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .nav-link:hover::before {
+            transform: scaleY(1);
+        }
+
+        .nav-link i {
+            margin-right: 12px;
+            width: 20px;
+            font-size: 16px;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover i {
+            color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+            transform: translateX(2px);
+        }
+
+        .nav-link.active::before {
+            transform: scaleY(1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-link.active i {
+            color: #ffffff !important;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 24px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark .sidebar-footer {
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .table-card {
+            background: var(--panel-bg);
+            border-radius: 14px;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-pill {
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: #eef5ff;
+            color: #0f5ea8;
+            font-weight: 600;
+            border: 1px solid #dbe7ff;
+        }
+
+        .stat-pill.danger {
+            background: #fff1f2;
+            color: #b42318;
+            border-color: #ffdadd;
+        }
+
+        /* Better touch targets for mobile */
+        .btn {
+            min-height: 38px;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 38px;
+        }
+
+        /* Mobile sidebar handling */
+        @media (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1200;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            body.sidebar-open {
+                overflow: hidden;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+                width: 100%;
+                overflow-x: hidden;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 12px;
+            }
+
+            .filter-card {
+                padding: 12px;
+            }
+
+            .table-card {
+                padding: 12px !important;
+                overflow-x: auto;
+            }
+
+            /* Mobile table styling */
+            .table-responsive {
+                font-size: 13px;
+            }
+
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+
+            /* Stack export buttons on mobile */
+            .export-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .export-buttons form {
+                width: 100%;
+            }
+
+            .export-buttons button {
+                width: 100%;
+            }
+
+            /* Stat pills wrap on mobile */
+            .stat-pill {
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+
+            /* Page heading responsive */
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 12px;
+            }
+
+            .page-header h3 {
+                font-size: 20px;
+            }
+
+            /* Sidebar footer positioning */
+            .sidebar-footer {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 8px;
+            }
+
+            .filter-card,
+            .table-card {
+                padding: 8px !important;
+                border-radius: 8px;
+            }
+
+            .page-header h3 {
+                font-size: 18px;
+            }
+
+            .stat-pill {
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            /* Extra small screen table */
+            .table {
+                font-size: 12px;
+            }
+
+            .table th,
+            .table td {
+                padding: 6px 4px;
+            }
+
+            .badge {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body class="light">
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Facemark Pro logo">
+            <div class="brand-text">
+                <div class="brand-title"><span>FaceMark</span><span class="accent">Pro</span></div>
+                <p class="brand-subtitle">Your face is your Attendance</p>
+            </div>
+        </div>
+        <div class="profile-section">
+            <div class="profile-header-row">
+                <a href="{{ url_for('faculty.profile') }}" style="display:inline-block;">
+                    <img src="{{ photo_path }}" alt="Profile Photo" class="profile-photo">
+                </a>
+                <div class="profile-info">
+                    <h5 class="profile-name">{{ faculty|title }}</h5>
+                    <div class="profile-email">{{ email }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="nav-links">
+            <ul class="nav-links">
+                <li style="display: flex; align-items: center; gap: 0.5rem;">
+                    <a href="{{ url_for('faculty.dashboard') }}"
+                        class="nav-link{% if request.path == url_for('faculty.dashboard') %} active{% endif %}"><i
+                            class="fas fa-home"></i> Dashboard</a>
+                </li>
+                <li><a href="{{ url_for('attendance.attendance') }}"
+                        class="nav-link{% if request.path == url_for('attendance.attendance') %} active{% endif %}"><i
+                            class="fas fa-calendar-check"></i> Attendance</a></li>
+                <li><a href="{{ url_for('attendance.manual_attendance') }}"
+                        class="nav-link{% if request.path == url_for('attendance.manual_attendance') %} active{% endif %}"><i
+                            class="fas fa-user-check"></i> Manual Attendance</a></li>
+                <li><a href="{{ url_for('faculty.reports') }}"
+                        class="nav-link{% if request.path == url_for('faculty.reports') %} active{% endif %}"><i
+                            class="fas fa-chart-line"></i> Reports</a></li>
+                {% if is_admin %}
+                <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"><i class="fas fa-user-shield"></i> Admin
+                        Dashboard</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <a href="/logout" class="nav-link text-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <label class="switch">
+                <input type="checkbox" class="theme-switch-checkbox">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <div class="d-lg-none"
+        style="position:sticky; top:0; z-index:1100; background: var(--panel-bg); padding: 12px 16px; border-bottom:1px solid var(--panel-border); display:flex; align-items:center; gap:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <button id="sidebarToggle" class="btn btn-outline-primary btn-sm" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div style="font-weight:600; font-size:16px;">Reports</div>
+    </div>
+
+    <!-- Sidebar Overlay for mobile -->
+    <div id="sidebarOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1150; backdrop-filter: blur(2px);">
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex flex-wrap justify-content-between align-items-start mb-3 page-header">
+            <div class="mb-3 mb-md-0">
+                <h3 class="mb-1">Attendance Reports</h3>
+                <div class="text-muted small">Default range is today; adjust filters and preview before exporting.</div>
+            </div>
+            <div class="d-flex gap-2 export-buttons">
+                <form method="get" class="d-inline">
+                    <input type="hidden" name="start_date" value="{{ start_date }}">
+                    <input type="hidden" name="end_date" value="{{ end_date }}">
+                    <input type="hidden" name="subject" value="{{ selected_subject }}">
+                    <input type="hidden" name="branch" value="{{ selected_branch }}">
+                    <input type="hidden" name="semester" value="{{ selected_semester }}">
+                    <input type="hidden" name="section" value="{{ selected_section }}">
+                    <input type="hidden" name="student_roll" value="{{ student_roll }}">
+                    <input type="hidden" name="export" value="csv">
+                    <button class="btn btn-outline-primary btn-sm"><i class="fas fa-file-csv"></i> <span class="d-none d-sm-inline">Export </span>CSV</button>
+                </form>
+                <form method="get" class="d-inline">
+                    <input type="hidden" name="start_date" value="{{ start_date }}">
+                    <input type="hidden" name="end_date" value="{{ end_date }}">
+                    <input type="hidden" name="subject" value="{{ selected_subject }}">
+                    <input type="hidden" name="branch" value="{{ selected_branch }}">
+                    <input type="hidden" name="semester" value="{{ selected_semester }}">
+                    <input type="hidden" name="section" value="{{ selected_section }}">
+                    <input type="hidden" name="student_roll" value="{{ student_roll }}">
+                    <input type="hidden" name="export" value="pdf">
+                    <button class="btn btn-outline-secondary btn-sm"><i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">Export </span>PDF</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="filter-card mb-4">
+            <form method="get" class="row g-3">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">Start Date</label>
+                    <input type="date" class="form-control form-control-sm" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">End Date</label>
+                    <input type="date" class="form-control form-control-sm" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">Subject</label>
+                    <select class="form-select form-select-sm" name="subject">
+                        <option value="">All subjects</option>
+                        {% for subj in subject_options %}
+                        <option value="{{ subj }}" {% if subj==selected_subject %}selected{% endif %}>{{ subj }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">Student (Roll No)</label>
+                    <input type="text" class="form-control form-control-sm" name="student_roll" value="{{ student_roll }}"
+                        placeholder="Optional">
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">Branch</label>
+                    <select class="form-select form-select-sm" name="branch">
+                        <option value="">All branches</option>
+                        {% for b in branch_options %}
+                        <option value="{{ b }}" {% if b==selected_branch %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">Semester</label>
+                    <select class="form-select form-select-sm" name="semester">
+                        <option value="">All semesters</option>
+                        {% for sem in semester_options %}
+                        <option value="{{ sem }}" {% if sem|string==selected_semester %}selected{% endif %}>{{ sem }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">Section</label>
+                    <select class="form-select form-select-sm" name="section">
+                        <option value="">All sections</option>
+                        {% for sec in section_options %}
+                        <option value="{{ sec }}" {% if sec==selected_section %}selected{% endif %}>{{ sec }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 d-flex align-items-end">
+                    <button class="btn btn-primary btn-sm w-100"><i class="fas fa-filter"></i> Apply Filters</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="stat-pill">Present: {{ totals.total_present }}</span>
+            <span class="stat-pill danger">Absent: {{ totals.total_absent }}</span>
+        </div>
+
+        <div class="table-card p-3 mb-4">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+                <h5 class="mb-0">Summary</h5>
+                <small class="text-muted">{{ start_date }} to {{ end_date }}</small>
+            </div>
+            {% if summary_rows %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-nowrap">Roll No</th>
+                            <th class="text-nowrap">Name</th>
+                            <th class="text-nowrap d-none d-md-table-cell">Branch</th>
+                            <th class="text-nowrap d-none d-md-table-cell">Sem</th>
+                            <th class="text-nowrap d-none d-md-table-cell">Sec</th>
+                            <th class="text-center text-nowrap">Present</th>
+                            <th class="text-center text-nowrap">Absent</th>
+                            <th class="text-center text-nowrap">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in summary_rows %}
+                        <tr>
+                            <td class="text-nowrap">{{ row.roll_no }}</td>
+                            <td class="text-nowrap">{{ row.name }}</td>
+                            <td class="text-nowrap d-none d-md-table-cell">{{ row.branch }}</td>
+                            <td class="text-nowrap d-none d-md-table-cell">{{ row.semester }}</td>
+                            <td class="text-nowrap d-none d-md-table-cell">{{ row.section }}</td>
+                            <td class="text-center">{{ row.present }}</td>
+                            <td class="text-center">{{ row.absent }}</td>
+                            <td class="text-center"><strong>{{ '%.1f'|format(row.percentage) }}%</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-md-none mt-2">
+                <small class="text-muted"><i class="fas fa-info-circle"></i> Scroll table horizontally to see all columns</small>
+            </div>
+            {% else %}
+            <div class="text-muted">No attendance records in this range.</div>
+            {% endif %}
+        </div>
+
+        {% if student_roll and detail_rows %}
+        <div class="table-card p-3">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+                <h5 class="mb-0">Detail for {{ student_roll }}</h5>
+                <small class="text-muted">Dates within range</small>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-nowrap">Date</th>
+                            <th class="text-nowrap">Subject</th>
+                            <th class="text-nowrap">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in detail_rows %}
+                        <tr>
+                            <td class="text-nowrap">{{ d.date }}</td>
+                            <td>{{ d.subject }}</td>
+                            <td>
+                                {% if d.status == 'Present' %}
+                                <span class="badge bg-success">Present</span>
+                                {% else %}
+                                <span class="badge bg-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <script>
+        // Sidebar Toggle (mobile)
+        (function () {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            function openSidebar() {
+                if (!sidebar) return;
+                sidebar.classList.add('open');
+                if (overlay) overlay.style.display = 'block';
+                // Only prevent scroll on mobile when sidebar is open
+                if (window.innerWidth < 992) {
+                    document.body.classList.add('sidebar-open');
+                }
+            }
+            function closeSidebar() {
+                if (!sidebar) return;
+                sidebar.classList.remove('open');
+                if (overlay) overlay.style.display = 'none';
+                document.body.classList.remove('sidebar-open');
+            }
+            if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+            if (overlay) overlay.addEventListener('click', closeSidebar);
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+            navLinks.forEach(a => a.addEventListener('click', closeSidebar));
+            
+            // Ensure body is scrollable on resize
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 992) {
+                    document.body.classList.remove('sidebar-open');
+                    if (sidebar) sidebar.classList.remove('open');
+                    if (overlay) overlay.style.display = 'none';
+                }
+            });
+        })();
+
+        // Theme Toggle (same as manual attendance)
+        const themeToggle = document.querySelector('.theme-switch-checkbox');
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.remove('light');
+            body.classList.add('dark');
+            if (themeToggle) themeToggle.checked = true;
+        } else {
+            body.classList.remove('dark');
+            body.classList.add('light');
+            if (themeToggle) themeToggle.checked = false;
+        }
+        if (themeToggle) {
+            themeToggle.addEventListener('change', () => {
+                if (themeToggle.checked) {
+                    body.classList.remove('light');
+                    body.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    body.classList.remove('dark');
+                    body.classList.add('light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
