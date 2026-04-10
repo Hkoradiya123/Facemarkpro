@@ -4,6 +4,7 @@ from flask_session import Session
 import os
 from dotenv import load_dotenv
 from .db.mongo_client import init_mongo_client
+from .extensions import init_cache
 
 import logging
 import sys
@@ -79,6 +80,13 @@ def create_app():
     except Exception as e:
         print(f"Warning: MongoDB initialization failed: {e}")
         print("The app will continue but database features may not work")
+
+    # Initialize cache (Redis when CACHE_REDIS_URL is set, otherwise SimpleCache fallback)
+    try:
+        init_cache(app)
+    except Exception as e:
+        print(f"Warning: Cache initialization failed: {e}")
+        print("The app will continue without response caching")
     
     # Register blueprints
     from .routes import student_routes, faculty_routes, attendance_routes, mobile_api, api_routes

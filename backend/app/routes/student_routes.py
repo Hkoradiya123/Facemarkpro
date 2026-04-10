@@ -9,6 +9,7 @@ import io
 from PIL import Image
 from ..services.face_recognition import FaceRecognitionService
 from ..db.mongo_client import get_collections
+from ..extensions import cache
 from ..utils.cloudinary_utils import (
     upload_pickle_to_cloudinary_from_memory, 
     get_pickle_from_cloudinary,
@@ -220,6 +221,11 @@ def student_dashboard_api():
     if not student:
         return jsonify({'success': False, 'error': 'Student not found'}), 404
 
+    cache_key = f"student_dashboard:{roll_no}:{student.get('branch','')}:{student.get('semester','')}:{student.get('section','')}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
+
     branch = student.get('branch', '')
     semester = str(student.get('semester', ''))
     section = student.get('section', 'A')
@@ -305,7 +311,7 @@ def student_dashboard_api():
             ['Friday', '-', '-', '-', '-', '-'],
         ]
 
-    return jsonify({
+    payload = {
         'success': True,
         'todayClasses': today_classes,
         'attendanceSummary': {
@@ -316,10 +322,10 @@ def student_dashboard_api():
         'recentAttendance': recent_attendance,
         'weeklyHeaders': weekly_headers,
         'weeklyTimetable': weekly_rows,
-    })
+    }
 
-
-@bp.route('/student/timetable')
+    cache.set(cache_key, payload, timeout=int(os.environ.get('DASHBOARD_CACHE_TTL', '60')))
+    return jsonify(payload)
 def student_timetable():
     roll_no = _require_student_session()
     if not roll_no:

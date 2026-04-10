@@ -17,3 +17,5 @@ fpdf2
 cloudinary
 cryptography
 requests
+Flask-Caching
+redis

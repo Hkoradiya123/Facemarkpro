@@ -8,6 +8,7 @@ from flask import Blueprint, jsonify, request, session, current_app, make_respon
 from bson import ObjectId
 
 from ..db.mongo_client import get_collections
+from ..extensions import cache
 from ..utils.cloudinary_utils import (
     get_pickle_from_cloudinary,
     list_encodings_from_cloudinary,
@@ -550,6 +551,11 @@ def whoami_api():
 @bp.get('/faculty/dashboard')
 @require_session_role({'teacher', 'super_admin', 'faculty'})
 def faculty_dashboard_data_api():
+    cache_key = f"faculty_dashboard:{session.get('faculty_email','')}:{session.get('role','')}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
+
     faculty_email = session.get('faculty_email')
     collections = get_collections()
 
@@ -667,7 +673,7 @@ def faculty_dashboard_data_api():
         values = [matrix[subject].get(cls, 0) for cls in classroom_list]
         heatmap_rows.append({'label': subject, 'classrooms': values, 'classroomMap': dict(zip(classroom_list, values))})
 
-    return jsonify({
+    payload = {
         'success': True,
         'profile': {
             'name': faculty_doc.get('name', 'Faculty'),
@@ -686,12 +692,20 @@ def faculty_dashboard_data_api():
             'rows': heatmap_rows,
         },
         'students_list': students_list,
-    })
+    }
+
+    cache.set(cache_key, payload, timeout=int(os.environ.get('DASHBOARD_CACHE_TTL', '60')))
+    return jsonify(payload)
 
 
 @bp.get('/admin/dashboard')
 @require_session_role({'super_admin'})
 def admin_dashboard_data_api():
+    cache_key = f"admin_dashboard:{session.get('faculty_email','')}:{session.get('role','')}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
+
     collections = get_collections()
     faculty_email = session.get('faculty_email')
 
@@ -701,7 +715,7 @@ def admin_dashboard_data_api():
     today = datetime.now().strftime('%Y-%m-%d')
     attendance_today = collections['attendance'].count_documents({'date': today})
 
-    return jsonify({
+    payload = {
         'success': True,
         'profile': {
             'name': (faculty_doc or {}).get('name', 'Admin'),
@@ -715,7 +729,10 @@ def admin_dashboard_data_api():
             'student_count': total_students,
             'attendance_today': attendance_today,
         },
-    })
+    }
+
+    cache.set(cache_key, payload, timeout=int(os.environ.get('DASHBOARD_CACHE_TTL', '60')))
+    return jsonify(payload)
 
 
 @bp.get('/admin/ping')
@@ -1076,6 +1093,11 @@ def faculty_report_filters_api():
     if not faculty_email:
         return json_error('Not authenticated', status=401)
 
+    cache_key = f"faculty_report_filters:{faculty_email}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
+
     collections = get_collections()
     faculty_doc = collections['faculty'].find_one({'email': faculty_email}, {'_id': 0, 'name': 1})
     faculty_name_lower = str((faculty_doc or {}).get('name', '')).strip().lower()
@@ -1085,14 +1107,17 @@ def faculty_report_filters_api():
     semester_options = sorted({c.get('semester') for c in class_options if c.get('semester') is not None})
     section_options = sorted({c.get('section') for c in class_options if c.get('section')})
 
-    return jsonify({
+    payload = {
         'success': True,
         'subject_options': subject_options,
         'class_options': class_options,
         'branch_options': branch_options,
         'semester_options': semester_options,
         'section_options': section_options,
-    })
+    }
+
+    cache.set(cache_key, payload, timeout=int(os.environ.get('REPORT_CACHE_TTL', '120')))
+    return jsonify(payload)
 
 
 @bp.get('/faculty/reports')
@@ -1101,6 +1126,11 @@ def faculty_reports_api():
     faculty_email = session.get('faculty_email')
     if not faculty_email:
         return json_error('Not authenticated', status=401)
+
+    cache_key = f"faculty_reports:{faculty_email}:{request.query_string.decode('utf-8')}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
 
     collections = get_collections()
     faculty_doc = collections['faculty'].find_one({'email': faculty_email}, {'_id': 0, 'name': 1})
@@ -1134,14 +1164,17 @@ def faculty_reports_api():
         section=filters['section'],
     )
 
-    return jsonify({
+    payload = {
         'success': True,
         'filters': filters,
         'summary_rows': summary_rows,
         'detail_rows': detail_rows,
         'totals': totals,
         'subject_summary': subject_summary,
-    })
+    }
+
+    cache.set(cache_key, payload, timeout=int(os.environ.get('REPORT_CACHE_TTL', '120')))
+    return jsonify(payload)
 
 
 @bp.get('/faculty/reports/export')
@@ -1205,13 +1238,18 @@ def faculty_reports_export_api():
 @bp.get('/admin/reports/filters')
 @require_session_role({'super_admin'})
 def admin_report_filters_api():
+    cache_key = "admin_report_filters"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
+
     collections = get_collections()
     subject_options, class_options, faculty_options = _get_admin_filter_options(collections)
     branch_options = sorted({c.get('branch') for c in class_options if c.get('branch')})
     semester_options = sorted({c.get('semester') for c in class_options if c.get('semester') is not None})
     section_options = sorted({c.get('section') for c in class_options if c.get('section')})
 
-    return jsonify({
+    payload = {
         'success': True,
         'subject_options': subject_options,
         'class_options': class_options,
@@ -1219,12 +1257,20 @@ def admin_report_filters_api():
         'semester_options': semester_options,
         'section_options': section_options,
         'faculty_options': faculty_options,
-    })
+    }
+
+    cache.set(cache_key, payload, timeout=int(os.environ.get('REPORT_CACHE_TTL', '120')))
+    return jsonify(payload)
 
 
 @bp.get('/admin/reports')
 @require_session_role({'super_admin'})
 def admin_reports_api():
+    cache_key = f"admin_reports:{request.query_string.decode('utf-8')}"
+    cached_payload = cache.get(cache_key)
+    if cached_payload:
+        return jsonify(cached_payload)
+
     collections = get_collections()
     filters = _normalize_report_filters(request.args)
 
@@ -1251,14 +1297,17 @@ def admin_reports_api():
         section=filters['section'],
     )
 
-    return jsonify({
+    payload = {
         'success': True,
         'filters': filters,
         'summary_rows': summary_rows,
         'detail_rows': detail_rows,
         'totals': totals,
         'subject_summary': subject_summary,
-    })
+    }
+
+    cache.set(cache_key, payload, timeout=int(os.environ.get('REPORT_CACHE_TTL', '120')))
+    return jsonify(payload)
 
 
 @bp.get('/admin/reports/export')
