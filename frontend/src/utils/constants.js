@@ -60,12 +60,10 @@ export const facultyNav = [
 ];
 
 export const studentNav = [
-  { label: "Timetable", to: "/student/timetable", icon: "calendar" },
+  { label: "Dashboard", to: "/student/dashboard", icon: "home" },
   { label: "Attendance", to: "/student/attendance", icon: "chart" },
   { label: "Profile", to: "/student/profile", icon: "user" },
   { label: "Change Password", to: "/student/change-password", icon: "key" },
-  { label: "Register Face", to: "/student/register-face", icon: "camera" },
-  { label: "Dashboard", to: "/student/dashboard", icon: "home" },
 ];
 
 export const iconMap = {

@@ -191,16 +191,20 @@ function FacultyReports() {
       </div>
 
       <SectionCard title="Summary" className="report-card report-main-table-card">
-        <div className="table-wrap">
-          <table className="admin-table">
-            <thead><tr><th>Roll No</th><th>Name</th><th>Branch</th><th>Sem</th><th>Sec</th><th>Present</th><th>Absent</th><th>%</th></tr></thead>
+        {loading ? (
+          <TableSkeleton rows={4} columns={8} />
+        ) : (
+          <div className="table-wrap">
+            <table className="admin-table">
+              <thead><tr><th>Roll No</th><th>Name</th><th>Branch</th><th>Sem</th><th>Sec</th><th>Present</th><th>Absent</th><th>%</th></tr></thead>
               <tbody>
-                {loading ? <tr><td colSpan="8"><TableSkeleton rows={4} columns={8} /></td></tr> : report.summary_rows.length ? report.summary_rows.map((row) => (
-                <tr key={row.roll_no}><td>{row.roll_no}</td><td>{row.name}</td><td>{row.branch}</td><td>{row.semester}</td><td>{row.section}</td><td>{row.present}</td><td>{row.absent}</td><td>{row.percentage}</td></tr>
-              )) : <tr><td colSpan="8">No records found</td></tr>}
+                {report.summary_rows.length ? report.summary_rows.map((row) => (
+                  <tr key={row.roll_no}><td>{row.roll_no}</td><td>{row.name}</td><td>{row.branch}</td><td>{row.semester}</td><td>{row.section}</td><td>{row.present}</td><td>{row.absent}</td><td>{row.percentage}</td></tr>
+                )) : <tr><td colSpan="8">No records found</td></tr>}
               </tbody>
             </table>
           </div>
+        )}
         </SectionCard>
       </div>
     </PageShell>

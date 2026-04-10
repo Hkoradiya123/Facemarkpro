@@ -11,11 +11,9 @@ import { getDashboardPath, getStoredAuthRole } from "./utils/auth";
 import { THEME_KEY } from "./utils/constants";
 import { RequireAdminAuth, RequireFacultyAuth } from "./components/Shared";
 import StudentDashboard from "./pages/student/StudentDashboard";
-import StudentTimetable from "./pages/student/StudentTimetable";
 import StudentAttendance from "./pages/student/StudentAttendance";
 import StudentProfile from "./pages/student/StudentProfile";
 import StudentChangePassword from "./pages/student/StudentChangePassword";
-import RegisterStudentFace from "./pages/student/RegisterStudentFace";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminManageFaculty from "./pages/admin/AdminManageFaculty";
 import AdminManageStudents from "./pages/admin/AdminManageStudents";
@@ -45,7 +43,7 @@ import LoginPage from "./pages/LoginPage";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppShell />
     </BrowserRouter>
   );
@@ -200,11 +198,9 @@ function AppShell() {
         }
       />
       <Route path="/student/dashboard" element={<StudentDashboard />} />
-      <Route path="/student/timetable" element={<StudentTimetable />} />
       <Route path="/student/attendance" element={<StudentAttendance />} />
       <Route path="/student/profile" element={<StudentProfile />} />
       <Route path="/student/change-password" element={<StudentChangePassword />} />
-      <Route path="/student/register-face" element={<RegisterStudentFace />} />
       <Route path="*" element={<Navigate to={defaultRoute} replace />} />
     </Routes>
   );

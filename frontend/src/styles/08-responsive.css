@@ -8,6 +8,9 @@
     inset: auto;
     min-height: auto;
     border-radius: 0 0 20px 20px;
+    transform: none;
+    opacity: 1;
+    visibility: visible;
   }
   .portal-loading-screen .portal-main-skeleton {
     margin-left: 0;

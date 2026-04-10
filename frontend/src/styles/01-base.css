@@ -115,8 +115,8 @@ img {
   background: var(--ui-sidebar-bg);
 }
 .portal-shell.student .portal-sidebar {
-  background: linear-gradient(180deg, #4a90e2 0%, #357abd 100%);
-  color: #fff;
+  background: var(--ui-sidebar-bg);
+  color: var(--ui-text);
 }
 
 .sidebar-brand,
@@ -193,7 +193,7 @@ img {
   display: block;
 }
 .portal-shell.student .profile-photo {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(25, 118, 210, 0.1);
 }
 .brand-title {
   display: flex;
@@ -500,11 +500,48 @@ body.dark .portal-skeleton-calendar {
 .skeleton-table {
   width: 100%;
 }
+.table-skeleton-grid {
+  display: grid;
+  gap: 10px;
+}
+.table-skeleton-row {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+}
+.table-skeleton-row-head {
+  margin-bottom: 2px;
+}
+.table-skeleton-cell {
+  min-width: 0;
+}
 .skeleton-filter-item {
   pointer-events: none;
 }
 .dashboard-skeleton {
   margin-bottom: 18px;
+}
+.dashboard-skeleton-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.dashboard-skeleton.student .dashboard-skeleton-grid.student-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.dashboard-skeleton.student .dashboard-skeleton-card.stat {
+  min-height: 112px;
+}
+.dashboard-skeleton.student .dashboard-skeleton-card.schedule,
+.dashboard-skeleton.student .dashboard-skeleton-card.timetable,
+.dashboard-skeleton.student .dashboard-skeleton-card.attendance {
+  min-height: 220px;
+}
+.dashboard-skeleton.student .dashboard-skeleton-card.actions,
+.dashboard-skeleton.student .dashboard-skeleton-card.summary {
+  min-height: 176px;
 }
 .dashboard-skeleton-grid {
   display: grid;
@@ -534,6 +571,17 @@ body.dark .portal-skeleton-calendar {
 }
 .skeleton-table-bars.short {
   width: 65%;
+}
+@media (max-width: 1024px) {
+  .dashboard-skeleton-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 768px) {
+  .dashboard-skeleton.student .dashboard-skeleton-grid.student-grid,
+  .dashboard-skeleton-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .sidebar-top-action-row {
   display: grid;
@@ -570,11 +618,13 @@ body.dark .portal-skeleton-calendar {
   height: 18px;
 }
 .portal-shell.student .nav-link {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--ui-text);
 }
 .portal-shell.student .nav-link.active,
 .portal-shell.student .nav-link:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, #4d98db 0%, #2d7ed2 100%);
+  color: #374151;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.24);
   transform: translateX(4px);
 }
 .portal-shell.admin .nav-link.active,
@@ -595,14 +645,24 @@ body.dark .portal-skeleton-calendar {
   color: #374151;
 }
 .portal-shell.admin .nav-link.active .nav-icon,
-.portal-shell.faculty .nav-link.active .nav-icon {
+.portal-shell.faculty .nav-link.active .nav-icon,
+.portal-shell.student .nav-link.active .nav-icon {
   color: #fff;
 }
 .portal-shell.faculty .nav-links {
   position: relative;
   padding: 10px 6px 0;
 }
+.portal-shell.student .nav-links {
+  position: relative;
+  padding: 10px 6px 0;
+}
 .portal-shell.faculty .nav-link {
+  padding: 13px 16px;
+  color: var(--ui-text);
+  font-weight: 500;
+}
+.portal-shell.student .nav-link {
   padding: 13px 16px;
   color: var(--ui-text);
   font-weight: 500;

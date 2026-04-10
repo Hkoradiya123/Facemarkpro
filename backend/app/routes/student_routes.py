@@ -209,6 +209,116 @@ def student_dashboard():
     )
 
 
+@bp.route('/api/student/dashboard', methods=['GET'])
+def student_dashboard_api():
+    roll_no = _require_student_session()
+    if not roll_no:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    cols = get_collections()
+    student = _get_student_doc(roll_no)
+    if not student:
+        return jsonify({'success': False, 'error': 'Student not found'}), 404
+
+    branch = student.get('branch', '')
+    semester = str(student.get('semester', ''))
+    section = student.get('section', 'A')
+
+    timetable_path = current_app.config.get('TIMETABLE_FILE', 'timetable.csv')
+    if not os.path.exists(timetable_path) and os.path.exists('timetable.csv'):
+        timetable_path = 'timetable.csv'
+
+    df = pd.read_csv(timetable_path) if os.path.exists(timetable_path) else pd.DataFrame()
+
+    student_timetable = pd.DataFrame()
+    if not df.empty:
+        student_timetable = df[
+            (df['branch'] == branch)
+            & (df['semester'].astype(str) == semester)
+            & (df['section'] == section)
+        ].copy()
+
+    # Build today's classes.
+    today_classes = []
+    if not student_timetable.empty:
+        today = pd.Timestamp.now().strftime('%A')
+        day_df = student_timetable[student_timetable['day'] == today].copy()
+        if 'start_time' in day_df.columns:
+            day_df = day_df.sort_values(by='start_time')
+        for row in day_df.to_dict(orient='records'):
+            today_classes.append({
+                'time': f"{row.get('start_time', '-') } - {row.get('end_time', '-') }",
+                'subject': row.get('subject', ''),
+                'faculty': row.get('faculty_name', row.get('faculty_email', '')),
+            })
+
+    # Build recent attendance.
+    recent_attendance = []
+    recent_cursor = cols['attendance'].find({"student.roll_no": roll_no}).sort("_id", -1).limit(10)
+    for record in recent_cursor:
+        recent_attendance.append({
+            'subject': record.get('subject', ''),
+            'date': record.get('date', ''),
+            'status': record.get('student', {}).get('status', ''),
+        })
+
+    # Build attendance summary.
+    total = cols['attendance'].count_documents({"student.roll_no": roll_no})
+    present = cols['attendance'].count_documents({"student.roll_no": roll_no, "student.status": "Present"})
+    absent = max(total - present, 0)
+
+    # Build weekly timetable matrix (real data) for frontend table.
+    default_headers = ['09:00', '10:00', '11:00', '12:00', '02:00']
+    weekly_headers = default_headers
+    weekly_rows = []
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+
+    if not student_timetable.empty:
+        if 'start_time' in student_timetable.columns:
+            slots = [str(value) for value in student_timetable['start_time'].dropna().astype(str).unique().tolist()]
+            slots = sorted(slots)
+            if slots:
+                weekly_headers = slots[:5]
+
+        for day in days:
+            day_df = student_timetable[student_timetable['day'] == day].copy()
+            if 'start_time' in day_df.columns:
+                day_df = day_df.sort_values(by='start_time')
+
+            subject_by_slot = {}
+            for _, row in day_df.iterrows():
+                key = str(row.get('start_time', ''))
+                if key and key not in subject_by_slot:
+                    subject_by_slot[key] = row.get('subject', '')
+
+            row_cells = [day]
+            for slot in weekly_headers:
+                row_cells.append(subject_by_slot.get(slot, '-'))
+            weekly_rows.append(row_cells)
+
+    if not weekly_rows:
+        weekly_rows = [
+            ['Monday', '-', '-', '-', '-', '-'],
+            ['Tuesday', '-', '-', '-', '-', '-'],
+            ['Wednesday', '-', '-', '-', '-', '-'],
+            ['Thursday', '-', '-', '-', '-', '-'],
+            ['Friday', '-', '-', '-', '-', '-'],
+        ]
+
+    return jsonify({
+        'success': True,
+        'todayClasses': today_classes,
+        'attendanceSummary': {
+            'present': int(present),
+            'absent': int(absent),
+            'total': int(total),
+        },
+        'recentAttendance': recent_attendance,
+        'weeklyHeaders': weekly_headers,
+        'weeklyTimetable': weekly_rows,
+    })
+
+
 @bp.route('/student/timetable')
 def student_timetable():
     roll_no = _require_student_session()

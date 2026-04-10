@@ -455,7 +455,7 @@ body.dark .source-badge {
 }
 
 body.dark .portal-shell.student .portal-sidebar {
-  background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+  background: var(--ui-sidebar-bg);
 }
 
 body.dark .portal-shell.admin .nav-link.active,

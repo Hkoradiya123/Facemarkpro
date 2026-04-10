@@ -452,6 +452,10 @@ def faculty_login_api():
     if not isinstance(hashed, (bytes, bytearray)) or not bcrypt.checkpw(password.encode('utf-8'), hashed):
         return json_error('Invalid email or password', status=401)
 
+    # Ensure prior student session does not override role resolution in current_session_user().
+    session.pop('student_roll_no', None)
+    session.pop('student_name', None)
+
     role = str(user.get('role', 'teacher') or 'teacher')
     session['faculty_email'] = email
     session['faculty_name'] = user.get('name', 'Faculty')
@@ -488,6 +492,10 @@ def student_login_api():
     hashed = user.get('password')
     if not isinstance(hashed, (bytes, bytearray)) or not bcrypt.checkpw(password.encode('utf-8'), hashed):
         return json_error('Invalid roll number or password', status=401)
+
+    # Ensure prior faculty session does not remain active when switching to student.
+    session.pop('faculty_email', None)
+    session.pop('faculty_name', None)
 
     session['student_roll_no'] = roll_no
     session['student_name'] = user.get('name', 'Student')

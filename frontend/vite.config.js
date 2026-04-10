@@ -31,10 +31,6 @@ export default defineConfig(({ mode }) => {
           target: backendTarget,
           changeOrigin: true,
         },
-        "/faculty": {
-          target: backendTarget,
-          changeOrigin: true,
-        },
         "/register_student_face": {
           target: backendTarget,
           changeOrigin: true,

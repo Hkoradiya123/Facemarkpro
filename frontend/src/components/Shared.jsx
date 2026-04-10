@@ -400,30 +400,29 @@ function SkeletonBlock({ className = "" }) {
 }
 
 function TableSkeleton({ rows = 5, columns = 4 }) {
+  const rowStyle = { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` };
+
   return (
     <div className="table-wrap skeleton-table-wrap">
-      <table className="admin-table skeleton-table">
-        <thead>
-          <tr>
-            {Array.from({ length: columns }, (_, index) => (
-              <th key={`head-${index}`}>
-                <SkeletonBlock className="skeleton-line skeleton-cell-head" />
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: rows }, (_, rowIndex) => (
-            <tr key={`row-${rowIndex}`}>
-              {Array.from({ length: columns }, (_, colIndex) => (
-                <td key={`cell-${rowIndex}-${colIndex}`}>
-                  <SkeletonBlock className={`skeleton-line skeleton-cell${colIndex === 0 ? " short" : ""}`} />
-                </td>
-              ))}
-            </tr>
+      <div className="table-skeleton-grid" role="presentation">
+        <div className="table-skeleton-row table-skeleton-row-head" style={rowStyle}>
+          {Array.from({ length: columns }, (_, index) => (
+            <div key={`head-${index}`} className="table-skeleton-cell">
+              <SkeletonBlock className="skeleton-line skeleton-cell-head" />
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+
+        {Array.from({ length: rows }, (_, rowIndex) => (
+          <div key={`row-${rowIndex}`} className="table-skeleton-row" style={rowStyle}>
+            {Array.from({ length: columns }, (_, colIndex) => (
+              <div key={`cell-${rowIndex}-${colIndex}`} className="table-skeleton-cell">
+                <SkeletonBlock className={`skeleton-line skeleton-cell${colIndex === 0 ? " short" : ""}`} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -441,9 +440,57 @@ function FilterSkeleton({ fields = 6 }) {
   );
 }
 
-function DashboardSkeleton() {
+function DashboardSkeleton({ variant = "faculty" }) {
+  if (variant === "student") {
+    return (
+      <div className="dashboard-skeleton student">
+        <div className="dashboard-skeleton-stats">
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={`student-stat-${index}`} className="dashboard-skeleton-card stat">
+              <SkeletonBlock className="skeleton-line skeleton-title short" />
+              <SkeletonBlock className="skeleton-line skeleton-text short" />
+            </div>
+          ))}
+        </div>
+
+        <div className="dashboard-skeleton-grid student-grid">
+          <div className="dashboard-skeleton-card schedule">
+            <SkeletonBlock className="skeleton-line skeleton-title" />
+            <SkeletonBlock className="skeleton-table-bars" />
+            <SkeletonBlock className="skeleton-table-bars" />
+            <SkeletonBlock className="skeleton-table-bars short" />
+          </div>
+
+          <div className="dashboard-skeleton-card attendance">
+            <SkeletonBlock className="skeleton-line skeleton-title" />
+            <SkeletonBlock className="skeleton-chart" />
+          </div>
+
+          <div className="dashboard-skeleton-card timetable">
+            <SkeletonBlock className="skeleton-line skeleton-title" />
+            <SkeletonBlock className="skeleton-chart" />
+          </div>
+
+          <div className="dashboard-skeleton-card actions">
+            <SkeletonBlock className="skeleton-line skeleton-title short" />
+            <SkeletonBlock className="skeleton-line skeleton-text" />
+            <SkeletonBlock className="skeleton-line skeleton-text" />
+            <SkeletonBlock className="skeleton-line skeleton-text short" />
+          </div>
+
+          <div className="dashboard-skeleton-card summary">
+            <SkeletonBlock className="skeleton-line skeleton-title" />
+            <SkeletonBlock className="skeleton-table-bars" />
+            <SkeletonBlock className="skeleton-table-bars" />
+            <SkeletonBlock className="skeleton-table-bars short" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="dashboard-skeleton">
+    <div className="dashboard-skeleton faculty">
       <div className="dashboard-skeleton-grid">
         <div className="dashboard-skeleton-card hero">
           <SkeletonBlock className="skeleton-line skeleton-title" />
