@@ -368,7 +368,14 @@ function renderFacultyWidget(widgetId, sizeClass, data, widget) {
         }
 
         const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const slots = [...new Set(lectures.map((lecture) => lecture.start_time).filter(Boolean))].sort();
+        const slots = [...new Set(lectures.map((lecture) => lecture.start_time).filter(Boolean))].sort((first, second) => {
+          const firstMinutes = parseLectureTime(first);
+          const secondMinutes = parseLectureTime(second);
+          if (firstMinutes == null && secondMinutes == null) return String(first).localeCompare(String(second));
+          if (firstMinutes == null) return 1;
+          if (secondMinutes == null) return -1;
+          return firstMinutes - secondMinutes;
+        });
         const visibleSlots = sizeClass === "tiny" ? slots.slice(0, 3) : sizeClass === "compact" ? slots.slice(0, 4) : slots.slice(0, 6);
 
         const gridMap = {};

@@ -38,8 +38,19 @@
   .photo-cropper-body {
     grid-template-columns: 1fr;
   }
+  .faculty-timetable-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .faculty-profile-meta-grid {
     grid-template-columns: 1fr;
+  }
+  .faculty-timetable-summary,
+  .faculty-timetable-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .faculty-timetable-matrix {
+    min-width: 680px;
   }
   .photo-cropper-stage-panel {
     min-height: 420px;

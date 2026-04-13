@@ -29,6 +29,8 @@ from ..utils.report_utils import (
 
 bp = Blueprint('api_routes', __name__, url_prefix='/api')
 
+TIMETABLE_DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
 
 def _collect_face_registrations():
     """Return all face registrations discovered in cloud and local pickle stores."""
@@ -109,6 +111,91 @@ def _collect_face_registrations():
                 continue
 
     return registrations
+
+
+def _normalize_day_label(value):
+    raw = str(value or '').strip()
+    if not raw:
+        return ''
+
+    lowered = raw.lower()
+    aliases = {
+        'mon': 'Monday',
+        'monday': 'Monday',
+        'tue': 'Tuesday',
+        'tues': 'Tuesday',
+        'tuesday': 'Tuesday',
+        'wed': 'Wednesday',
+        'wednesday': 'Wednesday',
+        'thu': 'Thursday',
+        'thur': 'Thursday',
+        'thurs': 'Thursday',
+        'thursday': 'Thursday',
+        'fri': 'Friday',
+        'friday': 'Friday',
+        'sat': 'Saturday',
+        'saturday': 'Saturday',
+        'sun': 'Sunday',
+        'sunday': 'Sunday',
+    }
+    return aliases.get(lowered, '')
+
+
+def _parse_clock_time(value):
+    return datetime.strptime(str(value or '').strip(), '%H:%M')
+
+
+def _faculty_timetable_query(faculty_email, faculty_name_lower):
+    filters = []
+    if faculty_email:
+        filters.append({'faculty_email': faculty_email})
+    if faculty_name_lower:
+        filters.append({'faculty_name': faculty_name_lower})
+    if not filters:
+        return {'faculty_email': '__missing__'}
+    if len(filters) == 1:
+        return filters[0]
+    return {'$or': filters}
+
+
+def _clear_faculty_dashboard_cache(faculty_email):
+    for role in ('teacher', 'faculty', 'super_admin'):
+        cache.delete(f'faculty_dashboard:{faculty_email}:{role}')
+
+
+def _serialize_timetable_slot(doc):
+    day = _normalize_day_label(doc.get('day'))
+    start_time = str(doc.get('start_time', '')).strip()
+    end_time = str(doc.get('end_time', '')).strip()
+    subject = str(doc.get('subject', '')).strip()
+    classroom = str(doc.get('classroom', '')).strip()
+    branch = str(doc.get('branch', '')).strip()
+    section = str(doc.get('section', '')).strip()
+
+    semester_value = doc.get('semester', '')
+    try:
+        semester = int(semester_value)
+    except Exception:
+        semester = str(semester_value or '').strip()
+
+    try:
+        period_no = int(doc.get('period_no', 0) or 0)
+    except Exception:
+        period_no = 0
+
+    return {
+        'id': str(doc.get('_id', '')),
+        'day': day,
+        'start_time': start_time,
+        'end_time': end_time,
+        'subject': subject,
+        'classroom': classroom,
+        'branch': branch,
+        'semester': semester,
+        'section': section,
+        'period_no': period_no,
+        'class_label': ' / '.join([part for part in [branch, str(semester), section] if str(part).strip()]),
+    }
 
 
 def _collect_registered_rolls():
@@ -872,6 +959,312 @@ def faculty_profile_update_api():
             'address': faculty_doc.get('address', ''),
             'photo_path': _resolve_photo_path(faculty_doc.get('photo_path')),
         },
+    })
+
+
+@bp.get('/faculty/profile/timetable')
+@require_session_role({'teacher', 'super_admin', 'faculty'})
+def faculty_profile_timetable_api():
+    faculty_email = session.get('faculty_email')
+    if not faculty_email:
+        return json_error('Not authenticated', status=401)
+
+    collections = get_collections()
+    faculty_doc = collections['faculty'].find_one(
+        {'email': faculty_email},
+        {'_id': 0, 'name': 1}
+    ) or {}
+    faculty_name_lower = str(faculty_doc.get('name', '')).strip().lower()
+
+    slots = [
+        _serialize_timetable_slot(doc)
+        for doc in collections['timetable'].find(
+            _faculty_timetable_query(faculty_email, faculty_name_lower),
+            {
+                'day': 1,
+                'start_time': 1,
+                'end_time': 1,
+                'subject': 1,
+                'classroom': 1,
+                'branch': 1,
+                'semester': 1,
+                'section': 1,
+                'period_no': 1,
+            }
+        )
+    ]
+    slots.sort(
+        key=lambda item: (
+            TIMETABLE_DAY_ORDER.index(item.get('day')) if item.get('day') in TIMETABLE_DAY_ORDER else 99,
+            item.get('start_time', ''),
+            item.get('end_time', ''),
+            item.get('subject', '').lower(),
+        )
+    )
+
+    return jsonify({
+        'success': True,
+        'timetable': slots,
+        'days': TIMETABLE_DAY_ORDER[:6],
+    })
+
+
+@bp.get('/faculty/profile/timetable/options')
+@require_session_role({'teacher', 'super_admin', 'faculty'})
+def faculty_profile_timetable_options_api():
+    faculty_email = session.get('faculty_email')
+    if not faculty_email:
+        return json_error('Not authenticated', status=401)
+
+    collections = get_collections()
+
+    branch_set = set()
+    class_set = set()
+    classroom_set = set()
+
+    for doc in collections['students'].find({}, {'_id': 0, 'branch': 1, 'semester': 1, 'section': 1}):
+        branch = str(doc.get('branch', '')).strip().upper()
+        section = str(doc.get('section', '')).strip().upper()
+        semester_value = doc.get('semester')
+        try:
+            semester = int(semester_value)
+        except Exception:
+            continue
+
+        if branch:
+            branch_set.add(branch)
+        if branch and section:
+            class_set.add((branch, semester, section))
+
+    for doc in collections['timetable'].find({}, {'_id': 0, 'branch': 1, 'semester': 1, 'section': 1, 'classroom': 1}):
+        branch = str(doc.get('branch', '')).strip().upper()
+        section = str(doc.get('section', '')).strip().upper()
+        semester_value = doc.get('semester')
+        classroom = str(doc.get('classroom', '')).strip()
+
+        try:
+            semester = int(semester_value)
+        except Exception:
+            semester = None
+
+        if branch:
+            branch_set.add(branch)
+        if branch and section and semester is not None:
+            class_set.add((branch, semester, section))
+        if classroom:
+            classroom_set.add(classroom)
+
+    branch_options = sorted(branch_set)
+    class_options = [
+        {
+            'branch': branch,
+            'semester': semester,
+            'section': section,
+            'value': f'{branch}|{semester}|{section}',
+            'label': f'{branch} / {semester} / {section}',
+        }
+        for branch, semester, section in sorted(class_set, key=lambda item: (item[0], item[1], item[2]))
+    ]
+    classroom_options = sorted(classroom_set, key=lambda value: value.lower())
+
+    return jsonify({
+        'success': True,
+        'branches': branch_options,
+        'classes': class_options,
+        'classrooms': classroom_options,
+    })
+
+
+@bp.post('/faculty/profile/timetable')
+@require_session_role({'teacher', 'super_admin', 'faculty'})
+def faculty_profile_timetable_save_api():
+    faculty_email = session.get('faculty_email')
+    if not faculty_email:
+        return json_error('Not authenticated', status=401)
+
+    payload = request.get_json(silent=True) or {}
+    slot_id = str(payload.get('id', '')).strip()
+    day = _normalize_day_label(payload.get('day'))
+    start_time = str(payload.get('start_time', '')).strip()
+    end_time = str(payload.get('end_time', '')).strip()
+    subject = str(payload.get('subject', '')).strip()
+    classroom = str(payload.get('classroom', '')).strip()
+    branch = str(payload.get('branch', '')).strip().upper()
+    section = str(payload.get('section', '')).strip().upper()
+    semester_raw = payload.get('semester')
+
+    if not day or not start_time or not end_time or not subject or not branch or semester_raw in (None, '') or not section:
+        return json_error('Day, time, subject, branch, semester, and section are required', status=400)
+
+    try:
+        semester = int(semester_raw)
+    except Exception:
+        return json_error('Semester must be a valid number', status=400)
+
+    try:
+        start_dt = _parse_clock_time(start_time)
+        end_dt = _parse_clock_time(end_time)
+    except Exception:
+        return json_error('Time must use HH:MM format', status=400)
+
+    if end_dt <= start_dt:
+        return json_error('End time must be after start time', status=400)
+
+    collections = get_collections()
+    faculty_doc = collections['faculty'].find_one(
+        {'email': faculty_email},
+        {'_id': 0, 'name': 1}
+    )
+    if not faculty_doc:
+        return json_error('Faculty not found', status=404)
+
+    faculty_name_lower = str(faculty_doc.get('name', '')).strip().lower()
+    timetable_query = _faculty_timetable_query(faculty_email, faculty_name_lower)
+
+    existing_slots = list(
+        collections['timetable'].find(
+            timetable_query,
+            {
+                'day': 1,
+                'start_time': 1,
+                'end_time': 1,
+                'subject': 1,
+            }
+        )
+    )
+
+    for existing in existing_slots:
+        if slot_id and str(existing.get('_id')) == slot_id:
+            continue
+        if _normalize_day_label(existing.get('day')) != day:
+            continue
+        try:
+            existing_start = _parse_clock_time(existing.get('start_time'))
+            existing_end = _parse_clock_time(existing.get('end_time'))
+        except Exception:
+            continue
+        if start_dt < existing_end and end_dt > existing_start:
+            return json_error(
+                f"Time overlaps with {str(existing.get('subject', 'another slot')).strip() or 'another slot'} on {day}",
+                status=409,
+            )
+
+    class_slots = list(
+        collections['timetable'].find(
+            {
+                'day': day,
+                'branch': branch,
+                'semester': semester,
+                'section': section,
+            },
+            {
+                'start_time': 1,
+                'end_time': 1,
+                'subject': 1,
+            }
+        )
+    )
+    for existing in class_slots:
+        if slot_id and str(existing.get('_id')) == slot_id:
+            continue
+        try:
+            existing_start = _parse_clock_time(existing.get('start_time'))
+            existing_end = _parse_clock_time(existing.get('end_time'))
+        except Exception:
+            continue
+        if start_dt < existing_end and end_dt > existing_start:
+            return json_error(
+                f"Class {branch} / {semester} / {section} already has an overlapping lecture during this time",
+                status=409,
+            )
+
+    ordered_times = sorted({
+        str(doc.get('start_time', '')).strip()
+        for doc in existing_slots
+        if str(doc.get('start_time', '')).strip()
+    } | {start_time})
+    period_no = ordered_times.index(start_time) + 1
+
+    slot_doc = {
+        'day': day,
+        'start_time': start_time,
+        'end_time': end_time,
+        'subject': subject,
+        'classroom': classroom,
+        'branch': branch,
+        'semester': semester,
+        'section': section,
+        'period_no': period_no,
+        'faculty_email': faculty_email,
+        'faculty_name': faculty_name_lower,
+        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+
+    if slot_id:
+        try:
+            slot_object_id = ObjectId(slot_id)
+        except Exception:
+            return json_error('Invalid timetable slot', status=400)
+
+        result = collections['timetable'].update_one(
+            {
+                '_id': slot_object_id,
+                **timetable_query,
+            },
+            {'$set': slot_doc},
+        )
+        if result.matched_count == 0:
+            return json_error('Timetable slot not found', status=404)
+        saved_doc = collections['timetable'].find_one({'_id': slot_object_id})
+        message = 'Timetable slot updated'
+    else:
+        slot_doc['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        insert_result = collections['timetable'].insert_one(slot_doc)
+        saved_doc = collections['timetable'].find_one({'_id': insert_result.inserted_id})
+        message = 'Timetable slot added'
+
+    _clear_faculty_dashboard_cache(faculty_email)
+
+    return jsonify({
+        'success': True,
+        'message': message,
+        'slot': _serialize_timetable_slot(saved_doc or slot_doc),
+    })
+
+
+@bp.delete('/faculty/profile/timetable/<slot_id>')
+@require_session_role({'teacher', 'super_admin', 'faculty'})
+def faculty_profile_timetable_delete_api(slot_id):
+    faculty_email = session.get('faculty_email')
+    if not faculty_email:
+        return json_error('Not authenticated', status=401)
+
+    collections = get_collections()
+    faculty_doc = collections['faculty'].find_one(
+        {'email': faculty_email},
+        {'_id': 0, 'name': 1}
+    ) or {}
+    faculty_name_lower = str(faculty_doc.get('name', '')).strip().lower()
+
+    try:
+        slot_object_id = ObjectId(slot_id)
+    except Exception:
+        return json_error('Invalid timetable slot', status=400)
+
+    result = collections['timetable'].delete_one(
+        {
+            '_id': slot_object_id,
+            **_faculty_timetable_query(faculty_email, faculty_name_lower),
+        }
+    )
+    if result.deleted_count == 0:
+        return json_error('Timetable slot not found', status=404)
+
+    _clear_faculty_dashboard_cache(faculty_email)
+
+    return jsonify({
+        'success': True,
+        'message': 'Timetable slot deleted',
     })
 
 

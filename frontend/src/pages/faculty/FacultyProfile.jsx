@@ -1,26 +1,72 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  FaBuilding,
+  FaCalendarDays,
   FaCamera,
   FaCloudArrowUp,
   FaCropSimple,
   FaEnvelope,
   FaFloppyDisk,
+  FaGraduationCap,
   FaIdBadge,
   FaLocationDot,
   FaPenToSquare,
   FaPhone,
+  FaPlus,
   FaRotateLeft,
-  FaUserGear,
+  FaTrash,
   FaUser,
+  FaUserGear,
   FaXmark,
-  FaBuilding,
-  FaCalendarDays,
-  FaGraduationCap,
 } from "react-icons/fa6";
 
 import { apiUrl, getStoredAuthRole, persistAuth, useSessionProfile } from "../../utils/auth";
 import { facultyNav } from "../../utils/constants";
 import { PageShell } from "../../components/Shared";
+
+const TIMETABLE_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DEFAULT_TIMETABLE_ROWS = [
+  { start_time: "09:00", end_time: "10:00" },
+  { start_time: "10:00", end_time: "11:00" },
+  { start_time: "11:00", end_time: "12:00" },
+  { start_time: "13:00", end_time: "14:00" },
+  { start_time: "14:00", end_time: "15:00" },
+];
+
+function timeToMinutes(value) {
+  const [hourText = "0", minuteText = "0"] = String(value || "").split(":");
+  const hours = Number(hourText);
+  const minutes = Number(minuteText);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  return (hours * 60) + minutes;
+}
+
+const createEmptyTimetableForm = (details = {}) => ({
+  id: "",
+  day: "Monday",
+  start_time: "09:00",
+  end_time: "10:00",
+  subject: "",
+  classroom: "",
+  branch: details.department || "",
+  semester: "",
+  section: "A",
+  class_value: "",
+});
+
+function sortTimetableSlots(slots) {
+  return [...(slots || [])].sort((first, second) => {
+    const dayDiff = TIMETABLE_DAYS.indexOf(first.day) - TIMETABLE_DAYS.indexOf(second.day);
+    if (dayDiff !== 0) return dayDiff;
+    const startDiff = timeToMinutes(first.start_time) - timeToMinutes(second.start_time);
+    if (startDiff !== 0) return startDiff;
+    const endDiff = timeToMinutes(first.end_time) - timeToMinutes(second.end_time);
+    if (endDiff !== 0) return endDiff;
+    return String(first.subject || "").localeCompare(String(second.subject || ""));
+  });
+}
 
 function FacultyProfile() {
   const profile = useSessionProfile("faculty");
@@ -49,6 +95,19 @@ function FacultyProfile() {
     qualification: "",
     address: "",
   });
+  const [timetableSlots, setTimetableSlots] = useState([]);
+  const [timetableDays, setTimetableDays] = useState(TIMETABLE_DAYS);
+  const [timetableOptions, setTimetableOptions] = useState({
+    branches: [],
+    classes: [],
+    classrooms: [],
+  });
+  const [isTimetableLoading, setIsTimetableLoading] = useState(true);
+  const [isEditingTimetable, setIsEditingTimetable] = useState(false);
+  const [isSavingTimetable, setIsSavingTimetable] = useState(false);
+  const [isDeletingTimetable, setIsDeletingTimetable] = useState("");
+  const [timetableError, setTimetableError] = useState("");
+  const [timetableForm, setTimetableForm] = useState(createEmptyTimetableForm());
 
   const videoRef = useRef(null);
   const stageRef = useRef(null);
@@ -87,6 +146,10 @@ function FacultyProfile() {
           qualification: data.qualification || "",
           address: data.address || "",
         });
+        setTimetableForm((current) => ({
+          ...current,
+          branch: current.branch || data.department || "",
+        }));
         persistAuth({
           token: "session",
           role: data.role || getStoredAuthRole() || "faculty",
@@ -106,6 +169,57 @@ function FacultyProfile() {
     }
 
     hydrateProfile();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadTimetableOptions() {
+      try {
+        const response = await fetch(apiUrl("/api/faculty/profile/timetable/options"), {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!mounted || !response.ok || !payload.success) return;
+        setTimetableOptions({
+          branches: Array.isArray(payload.branches) ? payload.branches : [],
+          classes: Array.isArray(payload.classes) ? payload.classes : [],
+          classrooms: Array.isArray(payload.classrooms) ? payload.classrooms : [],
+        });
+      } catch {
+        // keep empty fallback options
+      }
+    }
+
+    async function loadTimetable() {
+      try {
+        const response = await fetch(apiUrl("/api/faculty/profile/timetable"), {
+          method: "GET",
+          credentials: "include",
+          headers: { Accept: "application/json" },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!mounted) return;
+        if (!response.ok || !payload.success) {
+          setTimetableError(payload.error || payload.message || "Could not load your timetable.");
+          return;
+        }
+        setTimetableSlots(sortTimetableSlots(payload.timetable || []));
+        setTimetableDays(Array.isArray(payload.days) && payload.days.length ? payload.days : TIMETABLE_DAYS);
+      } catch {
+        if (mounted) setTimetableError("Could not load your timetable.");
+      } finally {
+        if (mounted) setIsTimetableLoading(false);
+      }
+    }
+
+    loadTimetableOptions();
+    loadTimetable();
     return () => {
       mounted = false;
     };
@@ -303,13 +417,14 @@ function FacultyProfile() {
       if (whoami.ok && payload.authenticated) {
         const user = payload.user || {};
         persistAuth({ token: "session", role: payload.role || getStoredAuthRole(), user });
-        setDetails({
-          name: user.name || details.name,
-          email: user.email || details.email,
-          department: user.department || details.department,
-          role: user.role || details.role,
-          photoPath: user.photo_path || details.photoPath,
-        });
+        setDetails((current) => ({
+          ...current,
+          name: user.name || current.name,
+          email: user.email || current.email,
+          department: user.department || current.department,
+          role: user.role || current.role,
+          photoPath: user.photo_path || current.photoPath,
+        }));
       } else {
         setDetails((current) => ({ ...current, photoPath: imageSource }));
       }
@@ -322,6 +437,153 @@ function FacultyProfile() {
       setIsSaving(false);
     }
   }
+
+  function openTimetableEditor(slot) {
+    setTimetableError("");
+    setActionMessage("");
+    if (slot) {
+      setTimetableForm({
+        id: slot.id || "",
+        day: slot.day || "Monday",
+        start_time: slot.start_time || "09:00",
+        end_time: slot.end_time || "10:00",
+        subject: slot.subject || "",
+        classroom: slot.classroom || "",
+        branch: slot.branch || details.department || "",
+        semester: String(slot.semester ?? ""),
+        section: slot.section || "A",
+        class_value: slot.branch && slot.semester && slot.section ? `${slot.branch}|${slot.semester}|${slot.section}` : "",
+      });
+    } else {
+      setTimetableForm(createEmptyTimetableForm(details));
+    }
+    setIsEditingTimetable(true);
+  }
+
+  function closeTimetableEditor() {
+    setIsEditingTimetable(false);
+    setIsSavingTimetable(false);
+    setTimetableError("");
+    setTimetableForm(createEmptyTimetableForm(details));
+  }
+
+  async function saveTimetableSlot(event) {
+    event.preventDefault();
+    if (isSavingTimetable) return;
+    setIsSavingTimetable(true);
+    setTimetableError("");
+    setActionMessage("");
+
+    try {
+      const response = await fetch(apiUrl("/api/faculty/profile/timetable"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          ...timetableForm,
+          branch: String(timetableForm.branch || "").trim().toUpperCase(),
+          section: String(timetableForm.section || "").trim().toUpperCase(),
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || payload.message || "Could not save timetable slot.");
+      }
+
+      setTimetableSlots((current) => {
+        const next = current.filter((slot) => slot.id !== payload.slot?.id);
+        if (payload.slot) next.push(payload.slot);
+        return sortTimetableSlots(next);
+      });
+      setActionMessage(payload.message || "Timetable updated successfully.");
+      closeTimetableEditor();
+    } catch (error) {
+      setTimetableError(error.message || "Could not save timetable slot.");
+    } finally {
+      setIsSavingTimetable(false);
+    }
+  }
+
+  async function deleteTimetableSlot(slot) {
+    if (!slot?.id || isDeletingTimetable) return;
+    const confirmed = window.confirm(`Delete ${slot.subject || "this slot"} on ${slot.day}?`);
+    if (!confirmed) return;
+
+    setIsDeletingTimetable(slot.id);
+    setTimetableError("");
+    setActionMessage("");
+
+    try {
+      const response = await fetch(apiUrl(`/api/faculty/profile/timetable/${slot.id}`), {
+        method: "DELETE",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || payload.message || "Could not delete timetable slot.");
+      }
+
+      setTimetableSlots((current) => current.filter((item) => item.id !== slot.id));
+      setActionMessage(payload.message || "Timetable slot deleted.");
+      if (timetableForm.id === slot.id) {
+        closeTimetableEditor();
+      }
+    } catch (error) {
+      setTimetableError(error.message || "Could not delete timetable slot.");
+    } finally {
+      setIsDeletingTimetable("");
+    }
+  }
+
+  const filteredClassOptions = useMemo(() => {
+    const mergedClassMap = new Map();
+    for (const item of timetableOptions.classes || []) {
+      if (item?.value) {
+        mergedClassMap.set(item.value, item);
+      }
+    }
+    for (const slot of timetableSlots) {
+      const branch = String(slot.branch || "").trim().toUpperCase();
+      const semester = String(slot.semester ?? "").trim();
+      const section = String(slot.section || "").trim().toUpperCase();
+      if (!branch || !semester || !section) continue;
+      const value = `${branch}|${semester}|${section}`;
+      if (!mergedClassMap.has(value)) {
+        mergedClassMap.set(value, {
+          branch,
+          semester: Number(slot.semester),
+          section,
+          value,
+          label: `${branch} / ${semester} / ${section}`,
+        });
+      }
+    }
+
+    const allClassOptions = Array.from(mergedClassMap.values()).sort((first, second) =>
+      String(first.label || "").localeCompare(String(second.label || ""))
+    );
+    const activeBranch = String(timetableForm.branch || "").trim().toUpperCase();
+    const matches = allClassOptions.filter((item) => {
+      if (!activeBranch) return true;
+      return String(item.branch || "").trim().toUpperCase() === activeBranch;
+    });
+    return matches.length ? matches : allClassOptions;
+  }, [timetableForm.branch, timetableOptions.classes, timetableSlots]);
+
+  const availableBranches = useMemo(() => {
+    const branchSet = new Set((timetableOptions.branches || []).map((item) => String(item || "").trim().toUpperCase()).filter(Boolean));
+    for (const classOption of filteredClassOptions) {
+      const branch = String(classOption.branch || "").trim().toUpperCase();
+      if (branch) branchSet.add(branch);
+    }
+    const currentBranch = String(timetableForm.branch || "").trim().toUpperCase();
+    if (currentBranch) branchSet.add(currentBranch);
+    return Array.from(branchSet).sort();
+  }, [filteredClassOptions, timetableForm.branch, timetableOptions.branches]);
 
   const infoCards = useMemo(
     () => [
@@ -343,6 +605,44 @@ function FacultyProfile() {
         transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
       }
     : undefined;
+
+  const timetableRows = useMemo(() => {
+    const rowMap = new Map();
+    for (const slot of timetableSlots) {
+      const key = `${slot.start_time || ""}|${slot.end_time || ""}`;
+      if (!rowMap.has(key)) {
+        rowMap.set(key, {
+          start_time: slot.start_time || "",
+          end_time: slot.end_time || "",
+        });
+      }
+    }
+
+    const rows = rowMap.size ? Array.from(rowMap.values()) : DEFAULT_TIMETABLE_ROWS;
+    return [...rows].sort((first, second) => {
+      const startDiff = timeToMinutes(first.start_time) - timeToMinutes(second.start_time);
+      if (startDiff !== 0) return startDiff;
+      return timeToMinutes(first.end_time) - timeToMinutes(second.end_time);
+    });
+  }, [timetableSlots]);
+
+  const timetableGridMap = useMemo(() => {
+    const map = {};
+    for (const slot of timetableSlots) {
+      map[`${slot.day}|${slot.start_time}|${slot.end_time}`] = slot;
+    }
+    return map;
+  }, [timetableSlots]);
+
+  const timetableSummary = useMemo(() => {
+    const activeDays = new Set(timetableSlots.map((slot) => slot.day).filter(Boolean)).size;
+    const firstSlot = timetableSlots[0];
+    return {
+      total: timetableSlots.length,
+      activeDays,
+      firstSlot: firstSlot ? `${firstSlot.day}, ${firstSlot.start_time}` : "No slots yet",
+    };
+  }, [timetableSlots]);
 
   async function saveProfileInfo() {
     if (isSavingInfo) return;
@@ -387,6 +687,10 @@ function FacultyProfile() {
           photo_path: next.photo_path || details.photoPath,
         },
       });
+      setTimetableForm((current) => ({
+        ...current,
+        branch: current.branch || next.department || "",
+      }));
       setActionMessage("Profile information updated successfully.");
       setIsEditingInfo(false);
     } catch {
@@ -401,7 +705,7 @@ function FacultyProfile() {
       variant="faculty"
       nav={facultyNav}
       title="Faculty Profile"
-      subtitle="Personal details and profile photo settings."
+      subtitle="Personal details, profile photo settings, and your own timetable."
       profile={profile}
     >
       <section className="faculty-profile-shell">
@@ -427,7 +731,7 @@ function FacultyProfile() {
           <div className="faculty-profile-hero-copy">
             <span className="faculty-profile-kicker">Faculty Profile</span>
             <h2>{details.name}</h2>
-            <p>Keep your profile polished with a clear photo, better framing, and a faculty page that matches the rest of the dashboard.</p>
+            <p>Keep your profile polished with a clear photo, updated details, and a timetable you can manage yourself whenever lectures change.</p>
             {actionMessage ? <div className="faculty-profile-success">{actionMessage}</div> : null}
             <div className="faculty-profile-meta-grid">
               {isProfileLoading
@@ -439,7 +743,6 @@ function FacultyProfile() {
                   ))
                 : infoCards.map((item) => {
                     const Icon = item.icon;
-
                     return (
                       <article key={item.label} className={`faculty-profile-meta-card${item.wide ? " wide" : ""}`}>
                         <span>
@@ -458,6 +761,106 @@ function FacultyProfile() {
             </div>
           </div>
         </div>
+
+        <section className="faculty-timetable-panel">
+          <div className="faculty-timetable-header">
+            <div>
+              <span className="faculty-profile-kicker">My Timetable</span>
+              <h3>Manage your lecture slots</h3>
+              <p>Add, update, or remove your own timetable entries here. Dashboard widgets and attendance flows will pick up the same data.</p>
+            </div>
+            <button type="button" className="primary-btn" onClick={() => openTimetableEditor()}>
+              <FaPlus /> Add Slot
+            </button>
+          </div>
+
+          <div className="faculty-timetable-summary">
+            <article className="faculty-timetable-summary-card">
+              <span>Total Slots</span>
+              <strong>{timetableSummary.total}</strong>
+            </article>
+            <article className="faculty-timetable-summary-card">
+              <span>Active Days</span>
+              <strong>{timetableSummary.activeDays}</strong>
+            </article>
+            <article className="faculty-timetable-summary-card">
+              <span>First Slot</span>
+              <strong>{timetableSummary.firstSlot}</strong>
+            </article>
+          </div>
+
+          {timetableError && !isEditingTimetable ? <p className="error-copy">{timetableError}</p> : null}
+
+          <div className="faculty-timetable-matrix-shell">
+            {isTimetableLoading ? (
+              <div className="faculty-timetable-matrix-loading">
+                <div className="skeleton-line skeleton-label" />
+                <div className="skeleton-line skeleton-text" />
+                <div className="skeleton-line skeleton-text" />
+                <div className="skeleton-line skeleton-text" />
+              </div>
+            ) : (
+              <div className="faculty-timetable-matrix-wrap">
+                <table className="faculty-timetable-matrix">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      {timetableDays.map((day) => (
+                        <th key={day}>{day.slice(0, 3)}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {timetableRows.map((row) => (
+                      <tr key={`${row.start_time}-${row.end_time}`}>
+                        <th>
+                          <span>{row.start_time}</span>
+                          <small>{row.end_time}</small>
+                        </th>
+                        {timetableDays.map((day) => {
+                          const slot = timetableGridMap[`${day}|${row.start_time}|${row.end_time}`];
+                          return (
+                            <td key={`${day}-${row.start_time}-${row.end_time}`}>
+                              <button
+                                type="button"
+                                className={`faculty-timetable-cell${slot ? " filled" : " empty"}`}
+                                onClick={() =>
+                                  openTimetableEditor(
+                                    slot || {
+                                      day,
+                                      start_time: row.start_time,
+                                      end_time: row.end_time,
+                                      branch: details.department || "",
+                                      section: "A",
+                                    }
+                                  )
+                                }
+                              >
+                                {slot ? (
+                                  <>
+                                    <strong>{slot.subject || "Untitled"}</strong>
+                                    <span>{slot.classroom || slot.class_label || "Class not set"}</span>
+                                    <small>{slot.class_label || "Class not set"}</small>
+                                  </>
+                                ) : (
+                                  <>
+                                    <strong>+ Add</strong>
+                                    <span>{day}</span>
+                                    <small>Click to add lecture</small>
+                                  </>
+                                )}
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
       </section>
 
       {editorOpen ? (
@@ -608,6 +1011,132 @@ function FacultyProfile() {
                 <FaFloppyDisk /> {isSavingInfo ? "Saving..." : "Save Changes"}
               </button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isEditingTimetable ? (
+        <div className="photo-cropper-overlay">
+          <div className="photo-cropper-modal profile-edit-modal faculty-timetable-modal" onClick={(event) => event.stopPropagation()}>
+            <form onSubmit={saveTimetableSlot}>
+              <div className="photo-cropper-header">
+                <div>
+                  <h3>{timetableForm.id ? "Edit Timetable Slot" : "Add Timetable Slot"}</h3>
+                  <p>Set the day, time, class, and room for one lecture slot. Overlapping times for the same day are blocked automatically.</p>
+                </div>
+                <button type="button" className="photo-cropper-close" onClick={closeTimetableEditor}>
+                  <FaXmark />
+                </button>
+              </div>
+
+              <div className="faculty-timetable-form-grid">
+                <label className="field-label">
+                  <span>Day</span>
+                  <select value={timetableForm.day} onChange={(event) => setTimetableForm((current) => ({ ...current, day: event.target.value }))}>
+                    {TIMETABLE_DAYS.map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field-label">
+                  <span>Start Time</span>
+                  <input type="time" value={timetableForm.start_time} onChange={(event) => setTimetableForm((current) => ({ ...current, start_time: event.target.value }))} />
+                </label>
+                <label className="field-label">
+                  <span>End Time</span>
+                  <input type="time" value={timetableForm.end_time} onChange={(event) => setTimetableForm((current) => ({ ...current, end_time: event.target.value }))} />
+                </label>
+                <label className="field-label faculty-profile-form-wide">
+                  <span>Subject</span>
+                  <input value={timetableForm.subject} onChange={(event) => setTimetableForm((current) => ({ ...current, subject: event.target.value }))} placeholder="DBMS" />
+                </label>
+                <label className="field-label">
+                  <span>Branch</span>
+                  <select
+                    value={timetableForm.branch}
+                    onChange={(event) =>
+                      setTimetableForm((current) => {
+                        const nextBranch = event.target.value;
+                        const currentClass = (timetableOptions.classes || []).find((item) => item.value === current.class_value);
+                        const keepCurrentClass = currentClass && currentClass.branch === nextBranch;
+                        return {
+                          ...current,
+                          branch: nextBranch,
+                          class_value: keepCurrentClass ? current.class_value : "",
+                          semester: keepCurrentClass ? current.semester : "",
+                          section: keepCurrentClass ? current.section : "A",
+                        };
+                      })
+                    }
+                  >
+                    <option value="">Select branch</option>
+                    {availableBranches.map((branch) => (
+                      <option key={branch} value={branch}>
+                        {branch}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field-label">
+                  <span>Class</span>
+                  <select
+                    value={timetableForm.class_value}
+                    onChange={(event) => {
+                      const selectedClass = filteredClassOptions.find((item) => item.value === event.target.value);
+                      setTimetableForm((current) => ({
+                        ...current,
+                        class_value: event.target.value,
+                        branch: selectedClass?.branch || current.branch,
+                        semester: selectedClass ? String(selectedClass.semester ?? "") : "",
+                        section: selectedClass?.section || "A",
+                      }));
+                    }}
+                    disabled={!filteredClassOptions.length}
+                  >
+                    <option value="">{filteredClassOptions.length ? "Select class" : "No classes found"}</option>
+                    {filteredClassOptions.map((classOption) => (
+                      <option key={classOption.value} value={classOption.value}>
+                        {classOption.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field-label faculty-profile-form-wide">
+                  <span>Classroom</span>
+                  <input list="faculty-classroom-options" value={timetableForm.classroom} onChange={(event) => setTimetableForm((current) => ({ ...current, classroom: event.target.value }))} placeholder="class_3 or C-203" />
+                  <datalist id="faculty-classroom-options">
+                    {(timetableOptions.classrooms || []).map((classroom) => (
+                      <option key={classroom} value={classroom} />
+                    ))}
+                  </datalist>
+                </label>
+              </div>
+
+              {timetableError ? <p className="error-copy faculty-timetable-error">{timetableError}</p> : null}
+
+              <div className="photo-cropper-footer">
+                <div className="faculty-timetable-modal-actions">
+                  {timetableForm.id ? (
+                    <button
+                      type="button"
+                      className="pagination-btn danger-btn"
+                      onClick={() => deleteTimetableSlot({ id: timetableForm.id, subject: timetableForm.subject, day: timetableForm.day })}
+                      disabled={isDeletingTimetable === timetableForm.id}
+                    >
+                      <FaTrash /> {isDeletingTimetable === timetableForm.id ? "Deleting..." : "Delete Slot"}
+                    </button>
+                  ) : null}
+                  <button type="button" className="pagination-btn" onClick={closeTimetableEditor}>
+                    Cancel
+                  </button>
+                </div>
+                <button type="submit" className="primary-btn" disabled={isSavingTimetable}>
+                  <FaFloppyDisk /> {isSavingTimetable ? "Saving..." : timetableForm.id ? "Update Slot" : "Add Slot"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       ) : null}
