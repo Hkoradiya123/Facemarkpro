@@ -13,13 +13,14 @@ import { normalizeFacultyLayout, getWidgetSizeClass } from "../../utils/constant
 import { PageShell, SectionCard, StatGrid, SimpleTable, ProfileFields, FormGrid } from "../../components/Shared";
 
 function RegisterStudentFace() {
+  const profile = useSessionProfile("student");
   return (
     <PageShell
       variant="student"
       nav={studentNav}
       title="Register Face"
       subtitle="Face registration screen styled to match the current student UI."
-      profile={{ avatar: "S", name: "Rahul Kumar", meta: "CSE / Semester 6" }}
+      profile={profile}
     >
       <div className="content-grid two">
         <SectionCard title="Camera Preview">

@@ -13,13 +13,14 @@ import { normalizeFacultyLayout, getWidgetSizeClass } from "../../utils/constant
 import { PageShell, SectionCard, StatGrid, SimpleTable, ProfileFields, FormGrid } from "../../components/Shared";
 
 function StudentChangePassword() {
+  const profile = useSessionProfile("student");
   return (
     <PageShell
       variant="student"
       nav={studentNav}
       title="Change Password"
       subtitle="Recreated as a clean card form inside the student shell."
-      profile={{ avatar: "S", name: "Rahul Kumar", meta: "CSE / Semester 6" }}
+      profile={profile}
     >
       <SectionCard title="Security">
         <FormGrid

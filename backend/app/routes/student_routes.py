@@ -221,41 +221,68 @@ def student_dashboard_api():
     if not student:
         return jsonify({'success': False, 'error': 'Student not found'}), 404
 
-    cache_key = f"student_dashboard:{roll_no}:{student.get('branch','')}:{student.get('semester','')}:{student.get('section','')}"
+    cache_key = f"student_dashboard:v2:{roll_no}:{student.get('branch','')}:{student.get('semester','')}:{student.get('section','')}"
     cached_payload = cache.get(cache_key)
     if cached_payload:
         return jsonify(cached_payload)
 
-    branch = student.get('branch', '')
-    semester = str(student.get('semester', ''))
-    section = student.get('section', 'A')
+    branch = str(student.get('branch', '') or '').strip()
+    semester = str(student.get('semester', '') or '').strip()
+    section = str(student.get('section', 'A') or 'A').strip()
 
-    timetable_path = current_app.config.get('TIMETABLE_FILE', 'timetable.csv')
-    if not os.path.exists(timetable_path) and os.path.exists('timetable.csv'):
-        timetable_path = 'timetable.csv'
-
-    df = pd.read_csv(timetable_path) if os.path.exists(timetable_path) else pd.DataFrame()
-
+    # Prefer Mongo timetable (source of truth for admin/faculty flows), fallback to CSV.
     student_timetable = pd.DataFrame()
-    if not df.empty:
-        student_timetable = df[
-            (df['branch'] == branch)
-            & (df['semester'].astype(str) == semester)
-            & (df['section'] == section)
-        ].copy()
+    semester_number = None
+    if semester.isdigit():
+        try:
+            semester_number = int(semester)
+        except Exception:
+            semester_number = None
+
+    timetable_query = {
+        'branch': {'$regex': f"^{re.escape(branch)}$", '$options': 'i'},
+        'section': {'$regex': f"^{re.escape(section)}$", '$options': 'i'},
+    }
+    if semester_number is not None:
+        timetable_query['semester'] = {'$in': [semester, semester_number]}
+    else:
+        timetable_query['semester'] = semester
+
+    mongo_timetable = list(
+        cols['timetable'].find(
+            timetable_query,
+            {
+                '_id': 0,
+                'day': 1,
+                'start_time': 1,
+                'end_time': 1,
+                'subject': 1,
+                'faculty_name': 1,
+                'faculty_email': 1,
+                'branch': 1,
+                'semester': 1,
+                'section': 1,
+            },
+        )
+    )
+
+    if mongo_timetable:
+        student_timetable = pd.DataFrame(mongo_timetable)
 
     # Build today's classes.
     today_classes = []
     if not student_timetable.empty:
         today = pd.Timestamp.now().strftime('%A')
-        day_df = student_timetable[student_timetable['day'] == today].copy()
+        day_df = student_timetable[
+            student_timetable['day'].astype(str).str.strip().str.lower() == today.lower()
+        ].copy()
         if 'start_time' in day_df.columns:
             day_df = day_df.sort_values(by='start_time')
         for row in day_df.to_dict(orient='records'):
             today_classes.append({
-                'time': f"{row.get('start_time', '-') } - {row.get('end_time', '-') }",
-                'subject': row.get('subject', ''),
-                'faculty': row.get('faculty_name', row.get('faculty_email', '')),
+                'time': f"{str(row.get('start_time', '-') or '-').strip()} - {str(row.get('end_time', '-') or '-').strip()}",
+                'subject': str(row.get('subject', '') or '').strip(),
+                'faculty': str(row.get('faculty_name', row.get('faculty_email', '')) or '').strip(),
             })
 
     # Build recent attendance.
@@ -281,21 +308,23 @@ def student_dashboard_api():
 
     if not student_timetable.empty:
         if 'start_time' in student_timetable.columns:
-            slots = [str(value) for value in student_timetable['start_time'].dropna().astype(str).unique().tolist()]
+            slots = [str(value).strip() for value in student_timetable['start_time'].dropna().astype(str).unique().tolist() if str(value).strip()]
             slots = sorted(slots)
             if slots:
                 weekly_headers = slots[:5]
 
         for day in days:
-            day_df = student_timetable[student_timetable['day'] == day].copy()
+            day_df = student_timetable[
+                student_timetable['day'].astype(str).str.strip().str.lower() == day.lower()
+            ].copy()
             if 'start_time' in day_df.columns:
                 day_df = day_df.sort_values(by='start_time')
 
             subject_by_slot = {}
             for _, row in day_df.iterrows():
-                key = str(row.get('start_time', ''))
+                key = str(row.get('start_time', '') or '').strip()
                 if key and key not in subject_by_slot:
-                    subject_by_slot[key] = row.get('subject', '')
+                    subject_by_slot[key] = str(row.get('subject', '') or '').strip()
 
             row_cells = [day]
             for slot in weekly_headers:

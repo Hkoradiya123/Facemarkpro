@@ -23,11 +23,7 @@ function StudentProfile() {
       nav={studentNav}
       title="My Profile"
       subtitle="View and manage your student information."
-      profile={{
-        avatar: displayName.charAt(0).toUpperCase(),
-        name: displayName,
-        meta: displayMeta,
-      }}
+      profile={profile}
       actions={
         <Link to="/student/dashboard" className="btn-secondary">
           ← Back to Dashboard

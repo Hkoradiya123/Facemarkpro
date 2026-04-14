@@ -378,6 +378,19 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.faculty-time-slot-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+.faculty-time-slot-separator {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ui-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
 .faculty-timetable-error {
   margin-top: 16px;
 }

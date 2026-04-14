@@ -13,13 +13,14 @@ import { normalizeFacultyLayout, getWidgetSizeClass } from "../../utils/constant
 import { PageShell, SectionCard, StatGrid, SimpleTable, ProfileFields, FormGrid } from "../../components/Shared";
 
 function StudentTimetable() {
+  const profile = useSessionProfile("student");
   return (
     <PageShell
       variant="student"
       nav={studentNav}
       title="Student Timetable"
       subtitle="Weekly class schedule with the same bright dashboard palette."
-      profile={{ avatar: "S", name: "Rahul Kumar", meta: "CSE / Semester 6" }}
+      profile={profile}
     >
       <SectionCard title="Weekly Timetable">
         <div className="table-wrap">

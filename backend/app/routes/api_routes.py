@@ -158,6 +158,19 @@ def _faculty_timetable_query(faculty_email, faculty_name_lower):
     return {'$or': filters}
 
 
+def _faculty_assignment_query(faculty_email, faculty_name_lower):
+    filters = []
+    if faculty_email:
+        filters.append({'faculty_email': faculty_email})
+    if faculty_name_lower:
+        filters.append({'faculty_name': faculty_name_lower})
+    if not filters:
+        return {'faculty_email': '__missing__'}
+    if len(filters) == 1:
+        return filters[0]
+    return {'$or': filters}
+
+
 def _clear_faculty_dashboard_cache(faculty_email):
     for role in ('teacher', 'faculty', 'super_admin'):
         cache.delete(f'faculty_dashboard:{faculty_email}:{role}')
@@ -168,6 +181,7 @@ def _serialize_timetable_slot(doc):
     start_time = str(doc.get('start_time', '')).strip()
     end_time = str(doc.get('end_time', '')).strip()
     subject = str(doc.get('subject', '')).strip()
+    subject_code = str(doc.get('subject_code', '')).strip().upper()
     classroom = str(doc.get('classroom', '')).strip()
     branch = str(doc.get('branch', '')).strip()
     section = str(doc.get('section', '')).strip()
@@ -189,6 +203,7 @@ def _serialize_timetable_slot(doc):
         'start_time': start_time,
         'end_time': end_time,
         'subject': subject,
+        'subject_code': subject_code,
         'classroom': classroom,
         'branch': branch,
         'semester': semester,
@@ -1116,10 +1131,58 @@ def faculty_profile_timetable_options_api():
         return json_error('Not authenticated', status=401)
 
     collections = get_collections()
+    faculty_doc = collections['faculty'].find_one(
+        {'email': faculty_email},
+        {'_id': 0, 'name': 1}
+    ) or {}
+    faculty_name_lower = str(faculty_doc.get('name', '')).strip().lower()
 
     branch_set = set()
     class_set = set()
     classroom_set = set()
+    subject_map = {}
+
+    assignment_query = _faculty_assignment_query(faculty_email, faculty_name_lower)
+    for doc in collections['faculty_assignments'].find(assignment_query, {
+        '_id': 0,
+        'branch': 1,
+        'semester': 1,
+        'section': 1,
+        'subject_code': 1,
+        'subject_name': 1,
+        'classroom': 1,
+    }):
+        branch = str(doc.get('branch', '')).strip().upper()
+        section = str(doc.get('section', '')).strip().upper()
+        subject_code = str(doc.get('subject_code', '')).strip().upper()
+        subject_name = str(doc.get('subject_name', '')).strip()
+        classroom = str(doc.get('classroom', '')).strip()
+
+        try:
+            semester = int(doc.get('semester'))
+        except Exception:
+            semester = None
+
+        if branch:
+            branch_set.add(branch)
+        if branch and section and semester is not None:
+            class_set.add((branch, semester, section))
+        if classroom:
+            classroom_set.add(classroom)
+
+        subject_key = f"{subject_code or subject_name.lower()}|{branch}|{semester}|{section}"
+        if subject_key and subject_key not in subject_map:
+            subject_map[subject_key] = {
+                'branch': branch,
+                'semester': semester,
+                'section': section,
+                'subject_code': subject_code,
+                'subject_name': subject_name,
+                'value': subject_key,
+                'label': f"{subject_name} ({subject_code}) - {branch} / {semester} / {section}" if subject_name and subject_code else f"{subject_name or subject_code} - {branch} / {semester} / {section}",
+                'class_label': f'{branch} / {semester} / {section}',
+                'classroom': classroom,
+            }
 
     for doc in collections['students'].find({}, {'_id': 0, 'branch': 1, 'semester': 1, 'section': 1}):
         branch = str(doc.get('branch', '')).strip().upper()
@@ -1153,7 +1216,24 @@ def faculty_profile_timetable_options_api():
         if classroom:
             classroom_set.add(classroom)
 
+    for doc in collections['academic_classrooms'].find({}, {'_id': 0, 'name': 1, 'active': 1}):
+        if doc.get('active', True) is False:
+            continue
+        name = str(doc.get('name', '')).strip()
+        if name:
+            classroom_set.add(name)
+
     branch_options = sorted(branch_set)
+    assigned_class_options = [
+        {
+            'branch': branch,
+            'semester': semester,
+            'section': section,
+            'value': f'{branch}|{semester}|{section}',
+            'label': f'{branch} / {semester} / {section}',
+        }
+        for branch, semester, section in sorted(class_set, key=lambda item: (item[0], item[1], item[2]))
+    ]
     class_options = [
         {
             'branch': branch,
@@ -1165,12 +1245,15 @@ def faculty_profile_timetable_options_api():
         for branch, semester, section in sorted(class_set, key=lambda item: (item[0], item[1], item[2]))
     ]
     classroom_options = sorted(classroom_set, key=lambda value: value.lower())
+    subject_options = sorted(subject_map.values(), key=lambda item: (item['branch'], item['semester'] or 0, item['section'], item['label']))
 
     return jsonify({
         'success': True,
         'branches': branch_options,
+        'assigned_classes': assigned_class_options,
         'classes': class_options,
         'classrooms': classroom_options,
+        'subjects': subject_options,
     })
 
 
@@ -1187,6 +1270,7 @@ def faculty_profile_timetable_save_api():
     start_time = str(payload.get('start_time', '')).strip()
     end_time = str(payload.get('end_time', '')).strip()
     subject = str(payload.get('subject', '')).strip()
+    subject_code = str(payload.get('subject_code', '')).strip().upper()
     classroom = str(payload.get('classroom', '')).strip()
     branch = str(payload.get('branch', '')).strip().upper()
     section = str(payload.get('section', '')).strip().upper()
@@ -1219,6 +1303,58 @@ def faculty_profile_timetable_save_api():
 
     faculty_name_lower = str(faculty_doc.get('name', '')).strip().lower()
     timetable_query = _faculty_timetable_query(faculty_email, faculty_name_lower)
+
+    assigned_subjects = list(
+        collections['faculty_assignments'].find(
+            _faculty_assignment_query(faculty_email, faculty_name_lower),
+            {
+                '_id': 0,
+                'branch': 1,
+                'semester': 1,
+                'section': 1,
+                'subject_code': 1,
+                'subject_name': 1,
+            }
+        )
+    )
+
+    matching_assignments = []
+    for assignment in assigned_subjects:
+        assignment_branch = str(assignment.get('branch', '')).strip().upper()
+        assignment_section = str(assignment.get('section', '')).strip().upper()
+        try:
+            assignment_semester = int(assignment.get('semester'))
+        except Exception:
+            assignment_semester = None
+
+        if assignment_branch != branch or assignment_semester != semester or assignment_section != section:
+            continue
+        matching_assignments.append(assignment)
+
+    if matching_assignments:
+        allowed_subject_keys = set()
+        for assignment in matching_assignments:
+            allowed_subject_keys.add(str(assignment.get('subject_code', '')).strip().upper())
+            allowed_subject_keys.add(str(assignment.get('subject_name', '')).strip().lower())
+
+        if subject_code:
+            subject_key = subject_code
+        else:
+            subject_key = subject.lower()
+
+        if subject_key not in allowed_subject_keys:
+            return json_error('Selected subject is not assigned to this class', status=409)
+
+        if subject_code:
+            resolved_subject_name = next(
+                (
+                    str(assignment.get('subject_name', '')).strip()
+                    for assignment in matching_assignments
+                    if str(assignment.get('subject_code', '')).strip().upper() == subject_code
+                ),
+                subject,
+            )
+            subject = resolved_subject_name or subject
 
     existing_slots = list(
         collections['timetable'].find(
@@ -1289,6 +1425,7 @@ def faculty_profile_timetable_save_api():
         'start_time': start_time,
         'end_time': end_time,
         'subject': subject,
+        'subject_code': subject_code,
         'classroom': classroom,
         'branch': branch,
         'semester': semester,

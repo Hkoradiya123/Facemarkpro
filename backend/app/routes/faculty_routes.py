@@ -298,33 +298,46 @@ def profile():
 
 
 @bp.route('/profile/photo', methods=['POST'])
+@bp.route('/faculty/profile/photo', methods=['POST'])
 def upload_profile_photo():
     """Allow faculty to upload/update their profile photo."""
+    expects_json = wants_json_response()
+
+    def _fail(message, status=400):
+        if expects_json:
+            return jsonify({'success': False, 'message': message}), status
+        flash(message, 'error')
+        return redirect(url_for('faculty.profile'))
+
+    def _ok(message):
+        if expects_json:
+            return jsonify({'success': True, 'message': message}), 200
+        flash(message, 'success')
+        return redirect(url_for('faculty.profile'))
+
     faculty_email = session.get('faculty_email')
     if not faculty_email:
+        if expects_json:
+            return jsonify({'success': False, 'message': 'Not authenticated'}), 401
         return redirect('/multilogin')
 
     file = request.files.get('photo')
     if not file or file.filename == '':
-        flash('Please choose an image to upload.', 'error')
-        return redirect(url_for('faculty.profile'))
+        return _fail('Please choose an image to upload.')
 
     allowed_ext = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     filename = secure_filename(file.filename)
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     if ext not in allowed_ext:
-        flash('Invalid file type. Please upload an image (png, jpg, jpeg, gif, webp).', 'error')
-        return redirect(url_for('faculty.profile'))
+        return _fail('Invalid file type. Please upload an image (png, jpg, jpeg, gif, webp).')
 
     if not (file.mimetype or '').startswith('image/'):
-        flash('Only image uploads are allowed.', 'error')
-        return redirect(url_for('faculty.profile'))
+        return _fail('Only image uploads are allowed.')
 
     raw_bytes = file.read()
     max_bytes = 20 * 1024 * 1024  # 20 MB
     if len(raw_bytes) > max_bytes:
-        flash('Image too large. Please upload a photo under 20MB.', 'error')
-        return redirect(url_for('faculty.profile'))
+        return _fail('Image too large. Please upload a photo under 20MB.')
     
     # Check if Cloudinary is configured
     is_cloudinary_configured = (
@@ -361,22 +374,21 @@ def upload_profile_photo():
             secure_url = response.get('secure_url')
             if secure_url:
                 collections['faculty'].update_one({'email': faculty_email}, {'$set': {'photo_path': secure_url}})
-                flash('Profile photo successfully updated.', 'success')
-                return redirect(url_for('faculty.profile'))
+                return _ok('Profile photo successfully updated.')
             else:
                 raise Exception("Cloudinary upload failed to return secure_url")
                 
         except Exception as e:
             current_app.logger.error(f"Cloudinary upload failed: {e}")
-            flash('Cloud upload failed. Falling back to local storage.', 'error')
+            if not expects_json:
+                flash('Cloud upload failed. Falling back to local storage.', 'error')
             # Fallback to local is below...
 
     # Fallback to local storage (or if Cloudinary not configured)
     try:
         image = Image.open(BytesIO(raw_bytes)).convert("RGB")
     except Exception:
-        flash('Invalid image file.', 'error')
-        return redirect(url_for('faculty.profile'))
+        return _fail('Invalid image file.')
 
     buffer = BytesIO()
     image.save(buffer, format='JPEG', quality=85, optimize=True)
@@ -393,14 +405,12 @@ def upload_profile_photo():
             f.write(buffer.read())
     except Exception as exc:  # pragma: no cover
         current_app.logger.exception("Failed to save profile photo: %s", exc)
-        flash('Could not save the photo. Please try again.', 'error')
-        return redirect(url_for('faculty.profile'))
+        return _fail('Could not save the photo. Please try again.', status=500)
 
     relative_path = f"uploads/faculty_photos/{stored_name}"
     collections['faculty'].update_one({'email': faculty_email}, {'$set': {'photo_path': relative_path}})
 
-    flash('Profile photo updated successfully (Local).', 'success')
-    return redirect(url_for('faculty.profile'))
+    return _ok('Profile photo updated successfully (Local).')
 
 # --------------------------------------------------------------------
 # DASHBOARD PAGE (unchanged except collection fix)

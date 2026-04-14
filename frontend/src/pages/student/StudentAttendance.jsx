@@ -13,6 +13,7 @@ import { normalizeFacultyLayout, getWidgetSizeClass } from "../../utils/constant
 import { PageShell, SectionCard, StatGrid, SimpleTable, ProfileFields, FormGrid } from "../../components/Shared";
 
 function StudentAttendance() {
+  const profile = useSessionProfile("student");
   const overall = useMemo(
     () => [
       { subject: "DBMS", attendance: "90%", trend: "Strong" },
@@ -29,7 +30,7 @@ function StudentAttendance() {
       nav={studentNav}
       title="Attendance Overview"
       subtitle="Subject-wise attendance, recent records, and semester summary."
-      profile={{ avatar: "S", name: "Rahul Kumar", meta: "CSE / Semester 6" }}
+      profile={profile}
     >
       <StatGrid
         stats={[

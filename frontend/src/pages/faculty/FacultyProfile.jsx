@@ -32,6 +32,12 @@ const DEFAULT_TIMETABLE_ROWS = [
   { start_time: "13:00", end_time: "14:00" },
   { start_time: "14:00", end_time: "15:00" },
 ];
+const TIMETABLE_TIME_OPTIONS = Array.from({ length: 29 }, (_, index) => {
+  const totalMinutes = (7 * 60) + (index * 30);
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const minutes = String(totalMinutes % 60).padStart(2, "0");
+  return `${hours}:${minutes}`;
+});
 
 function timeToMinutes(value) {
   const [hourText = "0", minuteText = "0"] = String(value || "").split(":");
@@ -49,6 +55,8 @@ const createEmptyTimetableForm = (details = {}) => ({
   start_time: "09:00",
   end_time: "10:00",
   subject: "",
+  subject_code: "",
+  subject_value: "",
   classroom: "",
   branch: details.department || "",
   semester: "",
@@ -101,6 +109,8 @@ function FacultyProfile() {
     branches: [],
     classes: [],
     classrooms: [],
+    subjects: [],
+    assigned_classes: [],
   });
   const [isTimetableLoading, setIsTimetableLoading] = useState(true);
   const [isEditingTimetable, setIsEditingTimetable] = useState(false);
@@ -188,8 +198,10 @@ function FacultyProfile() {
         if (!mounted || !response.ok || !payload.success) return;
         setTimetableOptions({
           branches: Array.isArray(payload.branches) ? payload.branches : [],
+          assigned_classes: Array.isArray(payload.assigned_classes) ? payload.assigned_classes : [],
           classes: Array.isArray(payload.classes) ? payload.classes : [],
           classrooms: Array.isArray(payload.classrooms) ? payload.classrooms : [],
+          subjects: Array.isArray(payload.subjects) ? payload.subjects : [],
         });
       } catch {
         // keep empty fallback options
@@ -398,14 +410,20 @@ function FacultyProfile() {
       const formData = new FormData();
       formData.append("photo", blob, "faculty-profile.jpg");
 
-      const response = await fetch(apiUrl("/faculty/profile/photo"), {
+      const response = await fetch(apiUrl("/profile/photo"), {
         method: "POST",
         credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
         body: formData,
       });
 
+      const uploadPayload = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        throw new Error("Photo upload failed");
+        throw new Error(uploadPayload.message || "Photo upload failed");
       }
 
       const whoami = await fetch(apiUrl("/api/auth/whoami"), {
@@ -431,8 +449,8 @@ function FacultyProfile() {
 
       setActionMessage("Profile photo updated successfully.");
       closeEditor();
-    } catch {
-      setEditorError("Could not save the new profile photo. Please try again.");
+    } catch (error) {
+      setEditorError(error?.message || "Could not save the new profile photo. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -442,12 +460,19 @@ function FacultyProfile() {
     setTimetableError("");
     setActionMessage("");
     if (slot) {
+      const selectedSubject = (timetableOptions.subjects || []).find(
+        (item) =>
+          String(item.subject_code || item.value || "").trim().toUpperCase() === String(slot.subject_code || "").trim().toUpperCase() ||
+          String(item.subject_name || "").trim().toLowerCase() === String(slot.subject || "").trim().toLowerCase()
+      );
       setTimetableForm({
         id: slot.id || "",
         day: slot.day || "Monday",
         start_time: slot.start_time || "09:00",
         end_time: slot.end_time || "10:00",
-        subject: slot.subject || "",
+        subject: selectedSubject?.subject_name || slot.subject || "",
+        subject_code: selectedSubject?.subject_code || slot.subject_code || "",
+        subject_value: selectedSubject?.value || "",
         classroom: slot.classroom || "",
         branch: slot.branch || details.department || "",
         semester: String(slot.semester ?? ""),
@@ -486,6 +511,12 @@ function FacultyProfile() {
           ...timetableForm,
           branch: String(timetableForm.branch || "").trim().toUpperCase(),
           section: String(timetableForm.section || "").trim().toUpperCase(),
+          semester: String(timetableForm.semester || "").trim(),
+          subject: String(timetableForm.subject || "").trim(),
+          subject_code: String(timetableForm.subject_code || "").trim().toUpperCase(),
+          class_value: selectedClassValue,
+          start_time: String(timetableForm.start_time || "").trim(),
+          end_time: String(timetableForm.end_time || "").trim(),
         }),
       });
       const payload = await response.json().catch(() => ({}));
@@ -541,6 +572,11 @@ function FacultyProfile() {
 
   const filteredClassOptions = useMemo(() => {
     const mergedClassMap = new Map();
+    for (const item of timetableOptions.assigned_classes || []) {
+      if (item?.value) {
+        mergedClassMap.set(item.value, item);
+      }
+    }
     for (const item of timetableOptions.classes || []) {
       if (item?.value) {
         mergedClassMap.set(item.value, item);
@@ -572,7 +608,40 @@ function FacultyProfile() {
       return String(item.branch || "").trim().toUpperCase() === activeBranch;
     });
     return matches.length ? matches : allClassOptions;
-  }, [timetableForm.branch, timetableOptions.classes, timetableSlots]);
+  }, [timetableForm.branch, timetableForm.section, timetableForm.semester, timetableOptions.assigned_classes, timetableOptions.classes, timetableSlots]);
+
+  const subjectOptions = useMemo(() => {
+    const mergedSubjectMap = new Map();
+    for (const item of timetableOptions.subjects || []) {
+      const key = String(item.value || item.subject_code || item.subject_name || "").trim();
+      if (key) {
+        mergedSubjectMap.set(key, item);
+      }
+    }
+    for (const slot of timetableSlots) {
+      const key = String(slot.subject_code || slot.subject || "").trim().toUpperCase();
+      if (!key || mergedSubjectMap.has(key)) continue;
+      mergedSubjectMap.set(key, {
+        branch: String(slot.branch || "").trim().toUpperCase(),
+        semester: String(slot.semester ?? "").trim(),
+        section: String(slot.section || "").trim().toUpperCase(),
+        subject_code: String(slot.subject_code || "").trim().toUpperCase(),
+        subject_name: String(slot.subject || "").trim(),
+        value: `${String(slot.subject_code || slot.subject || "").trim().toUpperCase()}|${String(slot.branch || "").trim().toUpperCase()}|${String(slot.semester ?? "").trim()}|${String(slot.section || "").trim().toUpperCase()}`,
+        label: `${String(slot.subject || "").trim()} (${String(slot.subject_code || "").trim().toUpperCase() || "NA"}) - ${String(slot.branch || "").trim().toUpperCase()} / ${String(slot.semester ?? "").trim()} / ${String(slot.section || "").trim().toUpperCase()}`,
+      });
+    }
+    const allSubjects = Array.from(mergedSubjectMap.values()).sort((first, second) => {
+      const branchDiff = String(first.branch || "").localeCompare(String(second.branch || ""));
+      if (branchDiff !== 0) return branchDiff;
+      const semesterDiff = Number(first.semester || 0) - Number(second.semester || 0);
+      if (semesterDiff !== 0) return semesterDiff;
+      const sectionDiff = String(first.section || "").localeCompare(String(second.section || ""));
+      if (sectionDiff !== 0) return sectionDiff;
+      return String(first.label || first.subject_name || "").localeCompare(String(second.label || second.subject_name || ""));
+    });
+    return allSubjects;
+  }, [timetableOptions.subjects, timetableSlots]);
 
   const availableBranches = useMemo(() => {
     const branchSet = new Set((timetableOptions.branches || []).map((item) => String(item || "").trim().toUpperCase()).filter(Boolean));
@@ -584,6 +653,62 @@ function FacultyProfile() {
     if (currentBranch) branchSet.add(currentBranch);
     return Array.from(branchSet).sort();
   }, [filteredClassOptions, timetableForm.branch, timetableOptions.branches]);
+
+  const availableSemesters = useMemo(() => {
+    const branch = String(timetableForm.branch || "").trim().toUpperCase();
+    const semesterSet = new Set();
+    for (const classOption of filteredClassOptions) {
+      const classBranch = String(classOption.branch || "").trim().toUpperCase();
+      if (branch && classBranch !== branch) continue;
+      if (classOption.semester !== undefined && classOption.semester !== null && String(classOption.semester).trim() !== "") {
+        semesterSet.add(String(classOption.semester));
+      }
+    }
+    return Array.from(semesterSet).sort((first, second) => Number(first) - Number(second));
+  }, [filteredClassOptions, timetableForm.branch]);
+
+  const availableSections = useMemo(() => {
+    const branch = String(timetableForm.branch || "").trim().toUpperCase();
+    const semester = String(timetableForm.semester || "").trim();
+    const sectionSet = new Set();
+    for (const classOption of filteredClassOptions) {
+      const classBranch = String(classOption.branch || "").trim().toUpperCase();
+      const classSemester = String(classOption.semester ?? "").trim();
+      if (branch && classBranch !== branch) continue;
+      if (semester && classSemester !== semester) continue;
+      if (classOption.section) sectionSet.add(String(classOption.section).trim().toUpperCase());
+    }
+    return Array.from(sectionSet).sort();
+  }, [filteredClassOptions, timetableForm.branch, timetableForm.semester]);
+
+  const selectedClassValue = useMemo(() => {
+    const branch = String(timetableForm.branch || "").trim().toUpperCase();
+    const semester = String(timetableForm.semester || "").trim();
+    const section = String(timetableForm.section || "").trim().toUpperCase();
+    if (!branch || !semester || !section) return "";
+    const matchingClass = filteredClassOptions.find(
+      (item) =>
+        String(item.branch || "").trim().toUpperCase() === branch &&
+        String(item.semester ?? "").trim() === semester &&
+        String(item.section || "").trim().toUpperCase() === section
+    );
+    return matchingClass?.value || `${branch}|${semester}|${section}`;
+  }, [filteredClassOptions, timetableForm.branch, timetableForm.section, timetableForm.semester]);
+
+  useEffect(() => {
+    if (!isEditingTimetable) return;
+    const selectedValue = String(timetableForm.subject_value || "").trim();
+    if (!selectedValue) return;
+    const stillValid = subjectOptions.some((item) => String(item.value || "").trim() === selectedValue);
+    if (!stillValid) {
+      setTimetableForm((current) => ({
+        ...current,
+        subject: "",
+        subject_code: "",
+        subject_value: "",
+      }));
+    }
+  }, [isEditingTimetable, subjectOptions, timetableForm.subject_value]);
 
   const infoCards = useMemo(
     () => [
@@ -602,7 +727,7 @@ function FacultyProfile() {
 
   const cropStyle = imageSource
     ? {
-        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+        transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${zoom})`,
       }
     : undefined;
 
@@ -1042,15 +1167,55 @@ function FacultyProfile() {
                 </label>
                 <label className="field-label">
                   <span>Start Time</span>
-                  <input type="time" value={timetableForm.start_time} onChange={(event) => setTimetableForm((current) => ({ ...current, start_time: event.target.value }))} />
+                  <select value={timetableForm.start_time} onChange={(event) => setTimetableForm((current) => ({ ...current, start_time: event.target.value }))}>
+                    {TIMETABLE_TIME_OPTIONS.map((time) => (
+                      <option key={`start-${time}`} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="field-label">
                   <span>End Time</span>
-                  <input type="time" value={timetableForm.end_time} onChange={(event) => setTimetableForm((current) => ({ ...current, end_time: event.target.value }))} />
+                  <select value={timetableForm.end_time} onChange={(event) => setTimetableForm((current) => ({ ...current, end_time: event.target.value }))}>
+                    {TIMETABLE_TIME_OPTIONS.map((time) => (
+                      <option key={`end-${time}`} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="field-label faculty-profile-form-wide">
                   <span>Subject</span>
-                  <input value={timetableForm.subject} onChange={(event) => setTimetableForm((current) => ({ ...current, subject: event.target.value }))} placeholder="DBMS" />
+                  <select
+                    value={timetableForm.subject_value}
+                    onChange={(event) => {
+                      const selectedSubject = subjectOptions.find((item) => String(item.value || "").trim() === String(event.target.value || "").trim());
+                      setTimetableForm((current) => ({
+                        ...current,
+                        subject_value: event.target.value,
+                        subject_code: selectedSubject?.subject_code || "",
+                        subject: selectedSubject?.subject_name || selectedSubject?.label || "",
+                        branch: String(selectedSubject?.branch || current.branch || "").trim().toUpperCase(),
+                        semester: selectedSubject?.semester !== undefined && selectedSubject?.semester !== null ? String(selectedSubject.semester) : current.semester,
+                        section: String(selectedSubject?.section || current.section || "A").trim().toUpperCase(),
+                        class_value: selectedSubject ? `${String(selectedSubject.branch || "").trim().toUpperCase()}|${String(selectedSubject.semester ?? "").trim()}|${String(selectedSubject.section || "").trim().toUpperCase()}` : current.class_value,
+                        classroom: selectedSubject?.classroom || current.classroom,
+                      }));
+                    }}
+                    disabled={!subjectOptions.length}
+                  >
+                    <option value="">{subjectOptions.length ? "Select subject" : "No subjects assigned"}</option>
+                    {subjectOptions.map((subject) => {
+                      const value = String(subject.value || "").trim();
+                      const label = subject.label || subject.subject_name || value;
+                      return (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </label>
                 <label className="field-label">
                   <span>Branch</span>
@@ -1059,7 +1224,7 @@ function FacultyProfile() {
                     onChange={(event) =>
                       setTimetableForm((current) => {
                         const nextBranch = event.target.value;
-                        const currentClass = (timetableOptions.classes || []).find((item) => item.value === current.class_value);
+                        const currentClass = (filteredClassOptions || []).find((item) => item.value === current.class_value);
                         const keepCurrentClass = currentClass && currentClass.branch === nextBranch;
                         return {
                           ...current,
@@ -1067,9 +1232,13 @@ function FacultyProfile() {
                           class_value: keepCurrentClass ? current.class_value : "",
                           semester: keepCurrentClass ? current.semester : "",
                           section: keepCurrentClass ? current.section : "A",
+                          subject: keepCurrentClass ? current.subject : "",
+                          subject_code: keepCurrentClass ? current.subject_code : "",
+                          subject_value: keepCurrentClass ? current.subject_value : "",
                         };
                       })
                     }
+                    disabled={Boolean(timetableForm.subject_value)}
                   >
                     <option value="">Select branch</option>
                     {availableBranches.map((branch) => (
@@ -1080,37 +1249,64 @@ function FacultyProfile() {
                   </select>
                 </label>
                 <label className="field-label">
-                  <span>Class</span>
+                  <span>Semester</span>
                   <select
-                    value={timetableForm.class_value}
-                    onChange={(event) => {
-                      const selectedClass = filteredClassOptions.find((item) => item.value === event.target.value);
+                    value={timetableForm.semester}
+                    onChange={(event) =>
                       setTimetableForm((current) => ({
                         ...current,
-                        class_value: event.target.value,
-                        branch: selectedClass?.branch || current.branch,
-                        semester: selectedClass ? String(selectedClass.semester ?? "") : "",
-                        section: selectedClass?.section || "A",
-                      }));
-                    }}
-                    disabled={!filteredClassOptions.length}
+                        semester: event.target.value,
+                        class_value: "",
+                        section: availableSections.includes(String(current.section || "").trim().toUpperCase()) ? current.section : "A",
+                        subject: "",
+                        subject_code: "",
+                        subject_value: "",
+                      }))
+                    }
+                    disabled={!availableSemesters.length || Boolean(timetableForm.subject_value)}
                   >
-                    <option value="">{filteredClassOptions.length ? "Select class" : "No classes found"}</option>
-                    {filteredClassOptions.map((classOption) => (
-                      <option key={classOption.value} value={classOption.value}>
-                        {classOption.label}
+                    <option value="">{availableSemesters.length ? "Select semester" : "No semesters found"}</option>
+                    {availableSemesters.map((semester) => (
+                      <option key={semester} value={semester}>
+                        {semester}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field-label">
+                  <span>Section</span>
+                  <select
+                    value={timetableForm.section}
+                    onChange={(event) =>
+                      setTimetableForm((current) => ({
+                        ...current,
+                        section: event.target.value,
+                        class_value: "",
+                        subject: "",
+                        subject_code: "",
+                        subject_value: "",
+                      }))
+                    }
+                    disabled={!availableSections.length || Boolean(timetableForm.subject_value)}
+                  >
+                    <option value="">{availableSections.length ? "Select section" : "No sections found"}</option>
+                    {availableSections.map((section) => (
+                      <option key={section} value={section}>
+                        {section}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="field-label faculty-profile-form-wide">
                   <span>Classroom</span>
-                  <input list="faculty-classroom-options" value={timetableForm.classroom} onChange={(event) => setTimetableForm((current) => ({ ...current, classroom: event.target.value }))} placeholder="class_3 or C-203" />
-                  <datalist id="faculty-classroom-options">
+                  <select value={timetableForm.classroom} onChange={(event) => setTimetableForm((current) => ({ ...current, classroom: event.target.value }))}>
+                    <option value="">Select classroom</option>
                     {(timetableOptions.classrooms || []).map((classroom) => (
-                      <option key={classroom} value={classroom} />
+                      <option key={classroom} value={classroom}>
+                        {classroom}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </label>
               </div>
 

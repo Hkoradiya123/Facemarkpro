@@ -27,6 +27,14 @@ export default defineConfig(({ mode }) => {
           target: backendTarget,
           changeOrigin: true,
         },
+        "/faculty/profile/photo": {
+          target: backendTarget,
+          changeOrigin: true,
+        },
+        "/profile": {
+          target: backendTarget,
+          changeOrigin: true,
+        },
         "/attendance": {
           target: backendTarget,
           changeOrigin: true,
