@@ -594,6 +594,65 @@
   accent-color: #2563eb;
 }
 
+.academic-setup-hero {
+  grid-template-columns: 1fr;
+}
+
+.academic-setup-toolbar {
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.academic-setup-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.academic-setup-tab {
+  border: 1px solid #dbe4ef;
+  background: #f8fbff;
+  color: #475569;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.academic-setup-tab:hover {
+  transform: translateY(-1px);
+  border-color: #93c5fd;
+}
+
+.academic-setup-tab.active {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.academic-setup-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.academic-setup-modal {
+  width: min(640px, calc(100vw - 24px));
+}
+
+.academic-setup-form {
+  display: grid;
+  gap: 12px;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

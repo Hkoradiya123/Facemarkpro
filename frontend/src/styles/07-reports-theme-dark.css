@@ -367,6 +367,17 @@ body.dark .admin-overview-table-link {
   color: #7dd3fc;
 }
 
+body.dark .academic-setup-tab {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: rgba(71, 85, 105, 0.8);
+  color: #cbd5e1;
+}
+
+body.dark .academic-setup-tab.active {
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.96) 0%, rgba(37, 99, 235, 0.96) 100%);
+  color: #eff6ff;
+}
+
 body.dark .admin-table,
 body.dark .manual-attendance-table,
 body.dark .manual-mark-table,

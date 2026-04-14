@@ -78,4 +78,9 @@ def get_collections():
         "timetable": db["timetable"],
         "faculty_layouts": db["faculty_layouts"],
         "faculty_calendar_events": db["faculty_calendar_events"],
+        "academic_branches": db["academic_branches"],
+        "academic_classes": db["academic_classes"],
+        "academic_classrooms": db["academic_classrooms"],
+        "academic_subjects": db["academic_subjects"],
+        "faculty_assignments": db["faculty_assignments"],
     }

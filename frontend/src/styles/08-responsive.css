@@ -31,6 +31,10 @@
   .admin-overview-actions {
     grid-template-columns: 1fr;
   }
+  .academic-setup-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
   .admin-student-results {
     max-height: 180px;
   }
@@ -170,6 +174,10 @@
   .admin-overview-snapshot-item {
     padding: 14px;
     border-radius: 16px;
+  }
+  .academic-setup-tab {
+    width: 100%;
+    justify-content: center;
   }
   .admin-overview-snapshot-item {
     grid-template-columns: 1fr;

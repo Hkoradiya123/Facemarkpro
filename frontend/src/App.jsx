@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminManageFaculty from "./pages/admin/AdminManageFaculty";
 import AdminManageStudents from "./pages/admin/AdminManageStudents";
 import AdminManageFaces from "./pages/admin/AdminManageFaces";
+import AdminAcademicSetup from "./pages/admin/AdminAcademicSetup";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminTablePage from "./pages/admin/AdminTablePage";
 import FacultyDashboard from "./pages/faculty/FacultyDashboard";
@@ -82,6 +83,14 @@ function AppShell() {
         element={
           <RequireAdminAuth>
             <AdminDashboard />
+          </RequireAdminAuth>
+        }
+      />
+      <Route
+        path="/admin/academic-setup"
+        element={
+          <RequireAdminAuth>
+            <AdminAcademicSetup />
           </RequireAdminAuth>
         }
       />

@@ -45,6 +45,7 @@ export const SIDEBAR_LOGO_URL = sidebarLogoRaw;
 
 export const adminNav = [
   { label: "Dashboard", to: "/admin/dashboard", icon: "home" },
+  { label: "Academic Setup", to: "/admin/academic-setup", icon: "gear" },
   { label: "Faculty", to: "/admin/manage-faculty", icon: "users" },
   { label: "Students", to: "/admin/manage-students", icon: "graduation" },
   { label: "Face Reg.", to: "/admin/manage-faces", icon: "camera" },
@@ -75,6 +76,7 @@ export const iconMap = {
   calendar: FaCalendarDays,
   edit: FaUserPen,
   user: FaUserGear,
+  gear: FaGear,
   key: FaUserPen,
   logout: FaArrowRightFromBracket,
 };

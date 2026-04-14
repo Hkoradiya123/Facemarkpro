@@ -55,10 +55,10 @@ function AdminDashboard() {
   }, [summary.attendanceToday, summary.studentCount]);
 
   const stats = useMemo(() => ([
-    { value: String(summary.facultyCount), label: "Total Faculty", tone: "purple" },
-    { value: String(summary.studentCount), label: "Total Students", tone: "blue" },
-    { value: String(summary.attendanceToday), label: "Attendance Today", tone: "green" },
-    { value: avgStudentsPerFaculty, label: "Students / Faculty", tone: "amber" },
+    { value: String(summary.facultyCount), label: "Total Faculty", tone: "purple", icon: FaUsers },
+    { value: String(summary.studentCount), label: "Total Students", tone: "blue", icon: FaUserGraduate },
+    { value: String(summary.attendanceToday), label: "Attendance Today", tone: "green", icon: FaChartLine },
+    { value: avgStudentsPerFaculty, label: "Students / Faculty", tone: "amber", icon: FaCamera },
   ]), [avgStudentsPerFaculty, summary.attendanceToday, summary.facultyCount, summary.studentCount]);
 
   const systemSnapshot = useMemo(() => ([

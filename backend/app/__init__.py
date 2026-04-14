@@ -20,6 +20,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def _mask_redis_url(redis_url):
+    if not redis_url:
+        return ""
+    try:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(redis_url)
+        host = parsed.hostname or "unknown-host"
+        port = parsed.port
+        scheme = parsed.scheme or "redis"
+        db_path = parsed.path or ""
+        if port:
+            return f"{scheme}://{host}:{port}{db_path}"
+        return f"{scheme}://{host}{db_path}"
+    except Exception:
+        return "[unparseable redis url]"
+
 def create_app():
     app = Flask(__name__)
     
@@ -84,6 +102,19 @@ def create_app():
     # Initialize cache (Redis when CACHE_REDIS_URL is set, otherwise SimpleCache fallback)
     try:
         init_cache(app)
+        cache_type = str(app.config.get('CACHE_TYPE', '') or '').strip()
+        redis_url = str(app.config.get('CACHE_REDIS_URL', '') or '').strip()
+
+        if cache_type.lower() == 'rediscache' or redis_url:
+            logger.info(
+                "Cache backend initialized: Redis (%s)",
+                _mask_redis_url(redis_url),
+            )
+        else:
+            logger.info(
+                "Cache backend initialized: %s (Redis not in use)",
+                cache_type or 'SimpleCache',
+            )
     except Exception as e:
         print(f"Warning: Cache initialization failed: {e}")
         print("The app will continue without response caching")

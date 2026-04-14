@@ -52,15 +52,6 @@ function AdminManageFaces() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!registerModalOpen || !selectedStudent) return;
-    const currentSearch = String(registerStudentSearch || "").trim();
-    const selectedLabel = `${selectedStudent.name} (${selectedStudent.roll_no}) - ${selectedStudent.branch}-${selectedStudent.semester}${selectedStudent.section}`;
-    if (!currentSearch || currentSearch === String(selectedStudent.roll_no || "").trim()) {
-      setRegisterStudentSearch(selectedLabel);
-    }
-  }, [registerModalOpen, registerStudentSearch, selectedStudent]);
-
   async function loadFaces() {
     setLoading(true);
     setError("");
@@ -120,6 +111,15 @@ function AdminManageFaces() {
     () => students.find((student) => String(student.roll_no || "") === String(registerStudentRoll || "")) || null,
     [students, registerStudentRoll]
   );
+
+  useEffect(() => {
+    if (!registerModalOpen || !selectedStudent) return;
+    const currentSearch = String(registerStudentSearch || "").trim();
+    const selectedLabel = `${selectedStudent.name} (${selectedStudent.roll_no}) - ${selectedStudent.branch}-${selectedStudent.semester}${selectedStudent.section}`;
+    if (!currentSearch || currentSearch === String(selectedStudent.roll_no || "").trim()) {
+      setRegisterStudentSearch(selectedLabel);
+    }
+  }, [registerModalOpen, registerStudentSearch, selectedStudent]);
 
   const filteredRegisterStudents = useMemo(() => {
     const query = String(registerStudentSearch || "").trim().toLowerCase();

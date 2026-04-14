@@ -198,6 +198,105 @@ def _serialize_timetable_slot(doc):
     }
 
 
+ACADEMIC_SETUP_CONFIG = {
+    'branches': {'collection': 'academic_branches', 'label': 'Branch'},
+    'classes': {'collection': 'academic_classes', 'label': 'Class'},
+    'classrooms': {'collection': 'academic_classrooms', 'label': 'Classroom'},
+    'subjects': {'collection': 'academic_subjects', 'label': 'Subject'},
+    'assignments': {'collection': 'faculty_assignments', 'label': 'Faculty assignment'},
+}
+
+
+def _to_int_or_none(value):
+    if value in (None, ''):
+        return None
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def _normalize_boolean(value, default=True):
+    if isinstance(value, bool):
+        return value
+    text = str(value if value is not None else '').strip().lower()
+    if text in {'true', '1', 'yes', 'active'}:
+        return True
+    if text in {'false', '0', 'no', 'inactive'}:
+        return False
+    return default
+
+
+def _serialize_academic_branch(doc):
+    return {
+        'id': str(doc.get('_id', '')),
+        'code': str(doc.get('code', '')).strip().upper(),
+        'name': str(doc.get('name', '')).strip(),
+        'active': bool(doc.get('active', True)),
+    }
+
+
+def _serialize_academic_class(doc):
+    branch = str(doc.get('branch', '')).strip().upper()
+    semester = _to_int_or_none(doc.get('semester'))
+    section = str(doc.get('section', '')).strip().upper()
+    return {
+        'id': str(doc.get('_id', '')),
+        'branch': branch,
+        'semester': semester,
+        'section': section,
+        'label': str(doc.get('label', '')).strip() or f'{branch} / {semester} / {section}',
+        'active': bool(doc.get('active', True)),
+    }
+
+
+def _serialize_academic_classroom(doc):
+    return {
+        'id': str(doc.get('_id', '')),
+        'name': str(doc.get('name', '')).strip(),
+        'type': str(doc.get('type', '')).strip() or 'Classroom',
+        'capacity': _to_int_or_none(doc.get('capacity')),
+        'active': bool(doc.get('active', True)),
+    }
+
+
+def _serialize_academic_subject(doc):
+    return {
+        'id': str(doc.get('_id', '')),
+        'code': str(doc.get('code', '')).strip().upper(),
+        'name': str(doc.get('name', '')).strip(),
+        'branch': str(doc.get('branch', '')).strip().upper(),
+        'semester': _to_int_or_none(doc.get('semester')),
+        'type': str(doc.get('type', '')).strip() or 'theory',
+        'active': bool(doc.get('active', True)),
+    }
+
+
+def _serialize_academic_assignment(doc):
+    faculty_name = str(doc.get('faculty_name', '')).strip()
+    faculty_email = str(doc.get('faculty_email', '')).strip().lower()
+    branch = str(doc.get('branch', '')).strip().upper()
+    semester = _to_int_or_none(doc.get('semester'))
+    section = str(doc.get('section', '')).strip().upper()
+    subject_code = str(doc.get('subject_code', '')).strip().upper()
+    subject_name = str(doc.get('subject_name', '')).strip()
+    classroom = str(doc.get('classroom', '')).strip()
+    return {
+        'id': str(doc.get('_id', '')),
+        'faculty_email': faculty_email,
+        'faculty_name': faculty_name,
+        'branch': branch,
+        'semester': semester,
+        'section': section,
+        'class_label': f'{branch} / {semester} / {section}',
+        'subject_code': subject_code,
+        'subject_name': subject_name,
+        'subject_label': f'{subject_name} ({subject_code})' if subject_code and subject_name else (subject_name or subject_code),
+        'classroom': classroom,
+        'active': bool(doc.get('active', True)),
+    }
+
+
 def _collect_registered_rolls():
     regs = _collect_face_registrations()
     return {str(r.get('student_roll', '')).strip() for r in regs if str(r.get('student_roll', '')).strip()}
@@ -2044,6 +2143,236 @@ def admin_delete_student(student_id):
             return json_error('Student not found', status=404)
     except Exception as e:
         return json_error(f'Delete error: {str(e)}', status=400)
+
+
+@bp.get('/admin/academic-setup')
+@require_session_role({'super_admin'})
+def admin_academic_setup_api():
+    collections = get_collections()
+
+    branches = [
+        _serialize_academic_branch(doc)
+        for doc in collections['academic_branches'].find({}, {'code': 1, 'name': 1, 'active': 1}).sort([('code', 1)])
+    ]
+    classes = [
+        _serialize_academic_class(doc)
+        for doc in collections['academic_classes'].find({}, {'branch': 1, 'semester': 1, 'section': 1, 'label': 1, 'active': 1}).sort([('branch', 1), ('semester', 1), ('section', 1)])
+    ]
+    classrooms = [
+        _serialize_academic_classroom(doc)
+        for doc in collections['academic_classrooms'].find({}, {'name': 1, 'type': 1, 'capacity': 1, 'active': 1}).sort([('name', 1)])
+    ]
+    subjects = [
+        _serialize_academic_subject(doc)
+        for doc in collections['academic_subjects'].find({}, {'code': 1, 'name': 1, 'branch': 1, 'semester': 1, 'type': 1, 'active': 1}).sort([('branch', 1), ('semester', 1), ('name', 1)])
+    ]
+    assignments = [
+        _serialize_academic_assignment(doc)
+        for doc in collections['faculty_assignments'].find({}, {
+            'faculty_email': 1,
+            'faculty_name': 1,
+            'branch': 1,
+            'semester': 1,
+            'section': 1,
+            'subject_code': 1,
+            'subject_name': 1,
+            'classroom': 1,
+            'active': 1,
+        }).sort([('faculty_name', 1), ('branch', 1), ('semester', 1), ('section', 1)])
+    ]
+    faculty_options = [
+        {
+            'email': str(doc.get('email', '')).strip().lower(),
+            'name': str(doc.get('name', '')).strip(),
+            'label': f"{str(doc.get('name', '')).strip()} ({str(doc.get('email', '')).strip().lower()})",
+            'department': str(doc.get('department', '')).strip().upper(),
+        }
+        for doc in collections['faculty'].find({}, {'_id': 0, 'name': 1, 'email': 1, 'department': 1}).sort([('name', 1)])
+        if str(doc.get('email', '')).strip()
+    ]
+
+    return jsonify({
+        'success': True,
+        'summary': {
+            'branches': len(branches),
+            'classes': len(classes),
+            'classrooms': len(classrooms),
+            'subjects': len(subjects),
+            'assignments': len(assignments),
+        },
+        'branches': branches,
+        'classes': classes,
+        'classrooms': classrooms,
+        'subjects': subjects,
+        'assignments': assignments,
+        'faculty_options': faculty_options,
+    })
+
+
+@bp.post('/admin/academic-setup/<entity>')
+@require_session_role({'super_admin'})
+def admin_academic_setup_save_api(entity):
+    entity = str(entity or '').strip().lower()
+    if entity not in ACADEMIC_SETUP_CONFIG:
+        return json_error('Unsupported academic setup entity', status=404)
+
+    collections = get_collections()
+    payload = request.get_json(silent=True) or {}
+    item_id = str(payload.get('id', '')).strip()
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    collection = collections[ACADEMIC_SETUP_CONFIG[entity]['collection']]
+
+    existing_filter = {}
+    doc = {}
+    serializer = None
+
+    if entity == 'branches':
+        code = str(payload.get('code', '')).strip().upper()
+        name = str(payload.get('name', '')).strip()
+        active = _normalize_boolean(payload.get('active'), True)
+        if not code or not name:
+            return json_error('Branch code and name are required', status=400)
+        duplicate = collection.find_one({'code': code})
+        if duplicate and str(duplicate.get('_id')) != item_id:
+            return json_error('Branch code already exists', status=409)
+        doc = {'code': code, 'name': name, 'active': active, 'updated_at': now_str}
+        existing_filter = {'code': code}
+        serializer = _serialize_academic_branch
+    elif entity == 'classes':
+        branch = str(payload.get('branch', '')).strip().upper()
+        semester = _to_int_or_none(payload.get('semester'))
+        section = str(payload.get('section', '')).strip().upper()
+        active = _normalize_boolean(payload.get('active'), True)
+        label = str(payload.get('label', '')).strip() or f'{branch} / {semester} / {section}'
+        if not branch or semester is None or not section:
+            return json_error('Branch, semester, and section are required', status=400)
+        duplicate = collection.find_one({'branch': branch, 'semester': semester, 'section': section})
+        if duplicate and str(duplicate.get('_id')) != item_id:
+            return json_error('Class already exists', status=409)
+        doc = {'branch': branch, 'semester': semester, 'section': section, 'label': label, 'active': active, 'updated_at': now_str}
+        existing_filter = {'branch': branch, 'semester': semester, 'section': section}
+        serializer = _serialize_academic_class
+    elif entity == 'classrooms':
+        name = str(payload.get('name', '')).strip()
+        room_type = str(payload.get('type', '')).strip() or 'Classroom'
+        capacity = _to_int_or_none(payload.get('capacity'))
+        active = _normalize_boolean(payload.get('active'), True)
+        if not name:
+            return json_error('Classroom name is required', status=400)
+        duplicate = collection.find_one({'name': name})
+        if duplicate and str(duplicate.get('_id')) != item_id:
+            return json_error('Classroom already exists', status=409)
+        doc = {'name': name, 'type': room_type, 'capacity': capacity, 'active': active, 'updated_at': now_str}
+        existing_filter = {'name': name}
+        serializer = _serialize_academic_classroom
+    elif entity == 'subjects':
+        code = str(payload.get('code', '')).strip().upper()
+        name = str(payload.get('name', '')).strip()
+        branch = str(payload.get('branch', '')).strip().upper()
+        semester = _to_int_or_none(payload.get('semester'))
+        subject_type = str(payload.get('type', '')).strip() or 'theory'
+        active = _normalize_boolean(payload.get('active'), True)
+        if not code or not name or not branch or semester is None:
+            return json_error('Subject code, name, branch, and semester are required', status=400)
+        duplicate = collection.find_one({'code': code})
+        if duplicate and str(duplicate.get('_id')) != item_id:
+            return json_error('Subject code already exists', status=409)
+        doc = {'code': code, 'name': name, 'branch': branch, 'semester': semester, 'type': subject_type, 'active': active, 'updated_at': now_str}
+        existing_filter = {'code': code}
+        serializer = _serialize_academic_subject
+    else:
+        faculty_email = str(payload.get('faculty_email', '')).strip().lower()
+        branch = str(payload.get('branch', '')).strip().upper()
+        semester = _to_int_or_none(payload.get('semester'))
+        section = str(payload.get('section', '')).strip().upper()
+        subject_code = str(payload.get('subject_code', '')).strip().upper()
+        classroom = str(payload.get('classroom', '')).strip()
+        active = _normalize_boolean(payload.get('active'), True)
+        if not faculty_email or not branch or semester is None or not section or not subject_code:
+            return json_error('Faculty, class, and subject are required', status=400)
+
+        faculty_doc = collections['faculty'].find_one({'email': faculty_email}, {'_id': 0, 'name': 1})
+        if not faculty_doc:
+            return json_error('Selected faculty was not found', status=404)
+        subject_doc = collections['academic_subjects'].find_one({'code': subject_code}, {'_id': 0, 'name': 1, 'code': 1})
+        if not subject_doc:
+            return json_error('Selected subject was not found', status=404)
+
+        duplicate = collection.find_one({
+            'faculty_email': faculty_email,
+            'branch': branch,
+            'semester': semester,
+            'section': section,
+            'subject_code': subject_code,
+        })
+        if duplicate and str(duplicate.get('_id')) != item_id:
+            return json_error('This faculty assignment already exists', status=409)
+        doc = {
+            'faculty_email': faculty_email,
+            'faculty_name': str(faculty_doc.get('name', '')).strip(),
+            'branch': branch,
+            'semester': semester,
+            'section': section,
+            'subject_code': str(subject_doc.get('code', '')).strip().upper(),
+            'subject_name': str(subject_doc.get('name', '')).strip(),
+            'classroom': classroom,
+            'active': active,
+            'updated_at': now_str,
+        }
+        existing_filter = {
+            'faculty_email': faculty_email,
+            'branch': branch,
+            'semester': semester,
+            'section': section,
+            'subject_code': subject_code,
+        }
+        serializer = _serialize_academic_assignment
+
+    if item_id:
+        try:
+            object_id = ObjectId(item_id)
+        except Exception:
+            return json_error('Invalid record id', status=400)
+        result = collection.update_one({'_id': object_id}, {'$set': doc})
+        if result.matched_count == 0:
+            return json_error(f"{ACADEMIC_SETUP_CONFIG[entity]['label']} not found", status=404)
+        saved = collection.find_one({'_id': object_id})
+        message = f"{ACADEMIC_SETUP_CONFIG[entity]['label']} updated successfully"
+    else:
+        doc['created_at'] = now_str
+        insert_result = collection.insert_one(doc)
+        saved = collection.find_one({'_id': insert_result.inserted_id})
+        message = f"{ACADEMIC_SETUP_CONFIG[entity]['label']} created successfully"
+
+    return jsonify({
+        'success': True,
+        'message': message,
+        'item': serializer(saved or doc),
+    })
+
+
+@bp.delete('/admin/academic-setup/<entity>/<item_id>')
+@require_session_role({'super_admin'})
+def admin_academic_setup_delete_api(entity, item_id):
+    entity = str(entity or '').strip().lower()
+    if entity not in ACADEMIC_SETUP_CONFIG:
+        return json_error('Unsupported academic setup entity', status=404)
+
+    try:
+        object_id = ObjectId(item_id)
+    except Exception:
+        return json_error('Invalid record id', status=400)
+
+    collections = get_collections()
+    collection = collections[ACADEMIC_SETUP_CONFIG[entity]['collection']]
+    result = collection.delete_one({'_id': object_id})
+    if result.deleted_count == 0:
+        return json_error(f"{ACADEMIC_SETUP_CONFIG[entity]['label']} not found", status=404)
+
+    return jsonify({
+        'success': True,
+        'message': f"{ACADEMIC_SETUP_CONFIG[entity]['label']} deleted successfully",
+    })
 
 
 @bp.post('/faculty/manual-attendance/students')

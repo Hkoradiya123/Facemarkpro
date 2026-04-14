@@ -816,6 +816,14 @@ body.dark .portal-skeleton-calendar {
   width: 56px;
   height: 56px;
   border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+.stat-icon svg {
+  width: 22px;
+  height: 22px;
 }
 .tone-blue {
   background: rgba(79, 172, 254, 0.16);
