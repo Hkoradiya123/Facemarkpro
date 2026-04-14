@@ -666,6 +666,9 @@ body.dark .login-container {
 .lp-role-btn.active {
   color: white;
 }
+.login-page-wrap.lp-dark .lp-role-btn.active {
+  color: #1e1e1e;
+}
 
 .lp-form-group {
   margin-bottom: 24px;
