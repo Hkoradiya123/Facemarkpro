@@ -152,6 +152,9 @@ img {
   line-height: 1.1;
   white-space: nowrap;
 }
+body.dark .sidebar-brand-name {
+  color: #60a5fa;
+}
 .sidebar-brand-tagline {
   font-size: 11px;
   color: #64748b;
@@ -159,6 +162,9 @@ img {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+body.dark .sidebar-brand-tagline {
+  color: #94a3b8;
 }
 .brand-mark,
 .profile-photo {
@@ -174,6 +180,12 @@ img {
   color: #1976d2;
   border: 1px solid rgba(59, 130, 246, 0.18);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+body.dark .brand-mark {
+  background: linear-gradient(135deg, #151c2b, #273451);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  box-shadow: inset 0 1px 0 rgba(96, 165, 250, 0.1);
 }
 .profile-photo {
   width: 74px;
@@ -204,6 +216,9 @@ img {
 }
 .brand-title .accent {
   color: #4facfe;
+}
+body.dark .brand-title .accent {
+  color: #60a5fa;
 }
 .brand-subtitle,
 .profile-copy p {
@@ -641,8 +656,11 @@ body.dark .portal-skeleton-calendar {
 }
 .portal-shell.admin .nav-link.active:hover,
 .portal-shell.faculty .nav-link.active:hover {
-  background: linear-gradient(135deg, #4d98db 0%, #2d7ed2 100%);
   color: #374151;
+  background: linear-gradient(135deg, #4d98db 0%, #2d7ed2 100%);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.24);
+  transform: translateX(4px);
+  /* transform: none; */
 }
 .portal-shell.admin .nav-link.active .nav-icon,
 .portal-shell.faculty .nav-link.active .nav-icon,

@@ -27,6 +27,25 @@ function LoginPage({ theme, setTheme, defaultRoute }) {
   const [loading, setLoading] = useState(false);
   const isDark = theme === "dark";
 
+  function storeLoginCredential(username, password, displayName) {
+    if (typeof window === "undefined") return;
+    const credentialApi = navigator.credentials;
+    if (!credentialApi || typeof credentialApi.store !== "function") return;
+
+    try {
+      const PasswordCredentialCtor = window.PasswordCredential;
+      if (!PasswordCredentialCtor) return;
+      const credential = new PasswordCredentialCtor({
+        id: username,
+        password,
+        name: displayName || username,
+      });
+      credentialApi.store(credential);
+    } catch (error) {
+      console.debug("Credential save not supported:", error);
+    }
+  }
+
   /*
   useEffect(() => {
     const role = getStoredAuthRole();
@@ -62,6 +81,8 @@ function LoginPage({ theme, setTheme, defaultRoute }) {
         if (rememberFaculty) localStorage.setItem(FACULTY_KEY, facultyEmail);
         else localStorage.removeItem(FACULTY_KEY);
 
+        storeLoginCredential(facultyEmail, facultyPassword, user?.name || user?.full_name || "FaceMark Pro");
+
         const dest = data.redirectPath || data.redirect_path || getDashboardPath(role);
         navigate(dest, { replace: true });
       } else {
@@ -91,6 +112,8 @@ function LoginPage({ theme, setTheme, defaultRoute }) {
         
         if (rememberStudent) localStorage.setItem(STUDENT_KEY, studentRoll);
         else localStorage.removeItem(STUDENT_KEY);
+
+        storeLoginCredential(studentRoll, studentPassword, data.user?.name || data.user?.full_name || "FaceMark Pro");
 
         const dest = data.redirectPath || data.redirect_path || "/student/dashboard";
         navigate(dest, { replace: true });
@@ -166,12 +189,12 @@ function LoginPage({ theme, setTheme, defaultRoute }) {
               <div className="lp-form-group">
                 <input
                   type="text"
-                  name="faculty_email"
+                  name="username"
                   className="lp-input"
                   placeholder="Email"
                   value={facultyEmail}
                   onChange={e => setFacultyEmail(e.target.value)}
-                  autoComplete="email"
+                  autoComplete="username"
                   required
                 />
               </div>

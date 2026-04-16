@@ -580,24 +580,30 @@ body.dark .login-container {
   margin-bottom: 30px;
 }
 .lp-brand-logo-wrap {
-  width: 70px;
-  height: 70px;
-  margin: 0 auto 16px;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 12px;
   background: rgba(79, 172, 254, 0.1);
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 6px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease;
+}
+body.dark .lp-brand-logo-wrap {
+  background: linear-gradient(135deg, #151c2b, #27345100);
+  /* background: linear-gradient(135deg, #151c2b00, #273451); */
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  box-shadow: inset 0 1px 0 rgba(96, 165, 250, 0.1);
 }
 .lp-brand-logo-wrap:hover {
   transform: translateY(-5px);
 }
 .lp-brand-logo-img {
-  width: 100%;
-  height: 100%;
+  width: 115%;
+  height: 115%;
   object-fit: contain;
 }
 .lp-brand-title {
@@ -606,6 +612,9 @@ body.dark .login-container {
   color: #4facfe;
   margin-bottom: 2px;
   letter-spacing: -0.5px;
+}
+body.dark .lp-brand-title {
+  color: #60a5fa;
 }
 .lp-brand-subtitle {
   font-size: 13px;

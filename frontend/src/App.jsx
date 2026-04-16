@@ -50,10 +50,40 @@ function App() {
   );
 }
 
+function getPageTitle(pathname) {
+  const titles = {
+    "/login": "FaceMark Pro | Login",
+    "/multilogin": "FaceMark Pro | Login",
+    "/admin/dashboard": "Admin Dashboard",
+    "/admin/academic-setup": "Academic Setup",
+    "/admin/manage-faculty": "Manage Faculty",
+    "/admin/manage-students": "Manage Students",
+    "/admin/manage-faces": "Manage Faces",
+    "/admin/reports": "Admin Reports",
+    "/faculty/dashboard": "Faculty Dashboard",
+    "/faculty/attendance": "Faculty Attendance",
+    "/faculty/attendance-result": "Attendance Result",
+    "/faculty/manual-attendance": "Manual Attendance",
+    "/faculty/manual-attendance/select": "Manual Attendance Select",
+    "/faculty/manual-attendance/mark": "Manual Attendance Mark",
+    "/faculty/students": "Faculty Students",
+    "/faculty/reports": "Faculty Reports",
+    "/faculty/profile": "Faculty Profile",
+    "/faculty/face-summary": "Face Summary",
+    "/student/dashboard": "Student Dashboard",
+    "/student/attendance": "Student Attendance",
+    "/student/profile": "Student Profile",
+    "/student/change-password": "Change Password",
+  };
+
+  return titles[pathname] || "FaceMark Pro";
+}
+
 function AppShell() {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || "light");
   const authRole = getStoredAuthRole();
   const defaultRoute = getDashboardPath(authRole);
+  const location = useLocation();
 
   useEffect(() => {
     const onThemeChange = (event) => {
@@ -72,6 +102,10 @@ function AppShell() {
     document.body.classList.add(theme);
     localStorage.setItem(THEME_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.title = getPageTitle(location.pathname);
+  }, [location.pathname]);
 
   return (
     <Routes>

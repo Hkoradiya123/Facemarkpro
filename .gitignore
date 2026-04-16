@@ -140,3 +140,12 @@ docker-compose.override.yml
 *.pid
 *.seed
 *.out
+
+
+
+# =========================
+# 🔹 caveman
+# =========================
+.agents
+*.log
+skills-lock.json

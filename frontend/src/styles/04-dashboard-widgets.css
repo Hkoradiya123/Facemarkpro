@@ -47,6 +47,10 @@
   transform: scale(0.97);
 }
 
+.mobile-layout-toggle {
+  display: none;
+}
+
 .faculty-widget-grid {
   min-height: 70vh;
   width: 100%;
@@ -293,6 +297,11 @@ body.dark .bar-segment[data-tooltip]::before {
 }
 
 @media (max-width: 768px) {
+  .mobile-layout-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
   .faculty-widget-grid.mobile-locked {
     touch-action: pan-y;
   }

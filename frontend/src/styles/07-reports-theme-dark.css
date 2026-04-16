@@ -481,8 +481,8 @@ body.dark .profile-section.profile-trigger:hover {
 }
 
 body.dark .profile-dropdown-link:hover,
-body.dark .portal-shell.admin .nav-link:hover,
-body.dark .portal-shell.faculty .nav-link:hover {
+body.dark .portal-shell.admin .nav-link:not(.active):hover,
+body.dark .portal-shell.faculty .nav-link:not(.active):hover {
   background: rgba(148, 163, 184, 0.16);
 }
 

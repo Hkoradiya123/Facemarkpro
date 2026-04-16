@@ -544,7 +544,7 @@ function FacultyDashboard() {
       actions={
         <Fragment>
           <button
-            className="pagination-btn"
+            className="pagination-btn mobile-layout-toggle"
             type="button"
             onClick={() => setIsMobileLayoutLocked((current) => !current)}
           >
