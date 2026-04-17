@@ -129,6 +129,43 @@
   margin-top: 20px;
 }
 
+.admin-overview-areas-card .table-wrap {
+  overflow: visible;
+}
+
+.admin-overview-areas-card .simple-table {
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  background: transparent;
+}
+
+.admin-overview-areas-card .simple-table th {
+  background: transparent;
+  border-bottom: 0;
+}
+
+.admin-overview-areas-card .simple-table td {
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-overview-areas-card .simple-table tbody tr td:first-child {
+  border-left: 1px solid #e2e8f0;
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.admin-overview-areas-card .simple-table tbody tr td:last-child {
+  border-right: 1px solid #e2e8f0;
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.admin-overview-areas-card .simple-table tbody tr:hover td {
+  background: #f8fafc;
+}
+
 .admin-overview-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -273,12 +310,13 @@
 
 .admin-table {
   width: 100%;
-  border-collapse: collapse;
-  background: #fff;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  background: transparent;
 }
 
 .admin-table thead {
-  background: #f8fafc;
+  background: transparent;
 }
 
 .admin-table th {
@@ -287,24 +325,42 @@
   font-weight: 600;
   color: #475569;
   font-size: 13px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 0;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .admin-table tbody tr {
-  border-bottom: 1px solid #e2e8f0;
-  transition: background-color 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 .admin-table tbody tr:hover {
-  background: #f1f5f9;
+  transform: translateY(-1px);
 }
 
 .admin-table td {
   padding: 14px 16px;
   color: #334155;
   font-size: 14px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table tbody tr td:first-child {
+  border-left: 1px solid #e2e8f0;
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.admin-table tbody tr td:last-child {
+  border-right: 1px solid #e2e8f0;
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.admin-table tbody tr:hover td {
+  background: #f8fafc;
 }
 
 .admin-table .faculty-name,
@@ -506,6 +562,226 @@
   border-color: #c4b5fd;
 }
 
+.face-text-btn.delete {
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.face-text-btn.delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.admin-inline-actions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.face-action-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.face-action-btn.reregister {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.face-action-btn.reregister:hover {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+}
+
+.face-action-btn.delete {
+  color: #dc2626;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.face-action-btn.delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.face-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.faces-table-skeleton-shell {
+  border-radius: 14px;
+}
+
+.faces-table-skeleton-table tbody tr {
+  pointer-events: none;
+}
+
+.faces-table-skeleton-table td {
+  vertical-align: middle;
+}
+
+.faces-cell-roll {
+  width: 72%;
+  height: 12px;
+}
+
+.faces-cell-name {
+  width: 82%;
+  height: 12px;
+}
+
+.faces-cell-class {
+  width: 56%;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.faces-cell-section {
+  width: 36px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.faces-cell-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faces-action-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.students-table-skeleton-table tbody tr,
+.faculty-table-skeleton-table tbody tr,
+.reports-summary-skeleton-table tbody tr,
+.setup-table-skeleton-table tbody tr {
+  pointer-events: none;
+}
+
+.students-cell-roll {
+  width: 70%;
+  height: 12px;
+}
+
+.students-cell-name {
+  width: 84%;
+  height: 12px;
+}
+
+.students-cell-branch,
+.students-cell-sem,
+.students-cell-face {
+  width: 62%;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.students-cell-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.students-action-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.students-action-wide {
+  width: 98px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.faculty-cell-name {
+  width: 70%;
+  height: 12px;
+}
+
+.faculty-cell-email {
+  width: 88%;
+  height: 12px;
+}
+
+.faculty-cell-dept,
+.faculty-cell-role {
+  width: 62%;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.faculty-cell-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.faculty-action-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.report-cell-roll {
+  width: 66%;
+  height: 12px;
+}
+
+.report-cell-name {
+  width: 82%;
+  height: 12px;
+}
+
+.report-cell-branch,
+.report-cell-num,
+.report-cell-percent {
+  width: 58%;
+  height: 12px;
+}
+
+.setup-cell-primary {
+  width: 74%;
+  height: 12px;
+}
+
+.setup-cell-regular {
+  width: 62%;
+  height: 12px;
+}
+
+.setup-cell-status {
+  width: 56%;
+  height: 26px;
+  border-radius: 999px;
+}
+
+.setup-cell-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setup-action-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
 .face-text-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -539,7 +815,7 @@
   gap: 16px;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 0;
 }
 
 .pagination-btn {
@@ -675,11 +951,16 @@
 
 .admin-face-register-modal {
   width: min(1040px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-face-register-body {
   display: grid;
   gap: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-student-picker {

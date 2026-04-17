@@ -4,7 +4,43 @@ import {
 } from "react-icons/fa6";
 import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
-import { PageShell, SectionCard, TableSkeleton } from "../../components/Shared";
+import { PageShell, SectionCard, SkeletonBlock } from "../../components/Shared";
+
+function FacultyListSkeleton({ rows = 6 }) {
+  return (
+    <div className="table-wrap skeleton-table-wrap faculty-table-skeleton-shell">
+      <table className="admin-table faculty-table-skeleton-table" aria-hidden="true">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, rowIndex) => (
+            <tr key={`faculty-skeleton-row-${rowIndex}`}>
+              <td><SkeletonBlock className="skeleton-line faculty-cell-name" /></td>
+              <td><SkeletonBlock className="skeleton-line faculty-cell-email" /></td>
+              <td><SkeletonBlock className="skeleton-line faculty-cell-dept" /></td>
+              <td><SkeletonBlock className="skeleton-line faculty-cell-role" /></td>
+              <td>
+                <div className="faculty-cell-actions">
+                  <SkeletonBlock className="skeleton-block faculty-action-dot" />
+                  <SkeletonBlock className="skeleton-block faculty-action-dot" />
+                  <SkeletonBlock className="skeleton-block faculty-action-dot" />
+                  <SkeletonBlock className="skeleton-block faculty-action-dot" />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function AdminManageFaculty() {
   const profile = useSessionProfile("admin");
@@ -270,7 +306,7 @@ function AdminManageFaculty() {
         {actionMessage ? <p className="success-copy">{actionMessage}</p> : null}
 
         {loading ? (
-          <TableSkeleton rows={6} columns={5} />
+          <FacultyListSkeleton rows={6} />
         ) : error ? (
           <p className="error-copy">{error}</p>
         ) : paginatedFaculty.length === 0 ? (

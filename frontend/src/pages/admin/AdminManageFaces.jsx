@@ -1,9 +1,51 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { FaArrowsRotate, FaCamera, FaCloudArrowUp, FaPlus, FaXmark } from "react-icons/fa6";
+import { FaArrowsRotate, FaCamera, FaCloudArrowUp, FaPlus, FaTrash, FaXmark } from "react-icons/fa6";
 import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
-import { PageShell, SectionCard, TableSkeleton } from "../../components/Shared";
+import { PageShell, SectionCard, SkeletonBlock } from "../../components/Shared";
+
+function FaceRegistrationsSkeleton({ rows = 7 }) {
+  return (
+    <div className="table-wrap skeleton-table-wrap faces-table-skeleton-shell">
+      <table className="admin-table faces-table-skeleton-table" aria-hidden="true">
+        <thead>
+          <tr>
+            <th>Roll Number</th>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Section</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, rowIndex) => (
+            <tr key={`face-skeleton-row-${rowIndex}`}>
+              <td>
+                <SkeletonBlock className="skeleton-line faces-cell-roll" />
+              </td>
+              <td>
+                <SkeletonBlock className="skeleton-line faces-cell-name" />
+              </td>
+              <td>
+                <SkeletonBlock className="skeleton-line faces-cell-class" />
+              </td>
+              <td>
+                <SkeletonBlock className="skeleton-line faces-cell-section" />
+              </td>
+              <td>
+                <div className="faces-cell-actions">
+                  <SkeletonBlock className="skeleton-block faces-action-dot" />
+                  <SkeletonBlock className="skeleton-block faces-action-dot" />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function AdminManageFaces() {
   const location = useLocation();
@@ -22,6 +64,7 @@ function AdminManageFaces() {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerMode, setRegisterMode] = useState("create");
+  const [deletingRoll, setDeletingRoll] = useState("");
   const [registerStudentRoll, setRegisterStudentRoll] = useState("");
   const [registerStudentSearch, setRegisterStudentSearch] = useState("");
   const [registerPhotos, setRegisterPhotos] = useState([null, null, null]);
@@ -290,6 +333,9 @@ function AdminManageFaces() {
       formData.append("branch", String(selectedStudent.branch || ""));
       formData.append("semester", String(selectedStudent.semester || ""));
       formData.append("student_id", String(selectedStudent.roll_no || ""));
+      if (registerMode === "replace") {
+        formData.append("allow_replace", "1");
+      }
       registerPhotos.forEach((photo, index) => {
         formData.append(`photo${index + 1}`, photo.file);
       });
@@ -346,6 +392,43 @@ function AdminManageFaces() {
     }
   }
 
+  async function deleteFaceRegistration(faceRow) {
+    const studentRoll = String(faceRow?.student_roll || "").trim();
+    if (!studentRoll || deletingRoll) return;
+
+    const confirmed = window.confirm(`Delete face data for ${studentRoll}? This will remove stored face embeddings.`);
+    if (!confirmed) return;
+
+    setDeletingRoll(studentRoll);
+    setError("");
+    setActionMessage("");
+
+    try {
+      const response = await fetch(apiUrl(`/api/admin/faces/reregister/${encodeURIComponent(studentRoll)}`), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ preserve_class_files: [] }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || "Unable to delete face data.");
+      }
+
+      setActionMessage(`Face data deleted for ${studentRoll}.`);
+      await loadFaces();
+      await loadStudents();
+    } catch (err) {
+      setError(err.message || "Unable to delete face data.");
+    } finally {
+      setDeletingRoll("");
+    }
+  }
+
   return (
     <PageShell
       variant="admin"
@@ -374,7 +457,7 @@ function AdminManageFaces() {
         {actionMessage ? <p className="success-copy">{actionMessage}</p> : null}
 
         {loading ? (
-          <TableSkeleton rows={6} columns={7} />
+          <FaceRegistrationsSkeleton rows={7} />
         ) : error ? (
           <p className="error-copy">{error}</p>
         ) : paginatedFaces.length === 0 ? (
@@ -411,12 +494,26 @@ function AdminManageFaces() {
                         <span className="dept-badge">{f.section || "A"}</span>
                       </td>
                       <td>
-                        <button
-                          className="face-text-btn reregister"
-                          onClick={() => openRegisterModal(f.student_roll, "replace")}
-                        >
-                          <FaArrowsRotate /> Re-register Face
-                        </button>
+                        <div className="admin-inline-actions">
+                          <button
+                            className="face-action-btn reregister"
+                            onClick={() => openRegisterModal(f.student_roll, "replace")}
+                            title="Re-register Face"
+                            aria-label="Re-register Face"
+                            disabled={Boolean(deletingRoll)}
+                          >
+                            <FaArrowsRotate />
+                          </button>
+                          <button
+                            className="face-action-btn delete"
+                            onClick={() => deleteFaceRegistration(f)}
+                            title={deletingRoll === String(f.student_roll || "").trim() ? "Deleting face data" : "Delete Face"}
+                            aria-label={deletingRoll === String(f.student_roll || "").trim() ? "Deleting face data" : "Delete Face"}
+                            disabled={deletingRoll === String(f.student_roll || "").trim()}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -588,6 +588,7 @@ def register_student_face():
         else:
             students = list(collections['students'].find({}, {"_id": 0}))
         student_id = request.form.get('student_id')
+        allow_replace = str(request.form.get('allow_replace') or '').strip().lower() in {'1', 'true', 'yes', 'replace'}
         new_name = str(request.form.get('new_name') or '').strip()
         new_roll_no = str(request.form.get('new_roll_no') or '').strip()
         section = None
@@ -656,6 +657,11 @@ def register_student_face():
                 # Check if this face is already registered in any class via Cloudinary
                 all_pickle_files = list_encodings_from_cloudinary()
                 existing_registration = None
+                normalized_roll_no = str(roll_no or '').strip().lower()
+                target_class_ids = {
+                    f"{branch}_{semester}",
+                    f"{branch}_{semester}_{section or 'A'}",
+                }
                 
                 for pickle_file in all_pickle_files:
                     class_id = pickle_file.replace('.pickle', '')
@@ -672,6 +678,17 @@ def register_student_face():
                                 distance = np.linalg.norm(avg_encoding - existing_encoding)
                                 if distance < 0.85:  # Same tolerance as face recognition
                                     existing_student = existing_metadata[i]
+
+                                    existing_roll_no = str(existing_student.get('roll_no', '')).strip().lower()
+
+                                    # Always allow same student in same target class (acts like update instead of duplicate).
+                                    if existing_roll_no == normalized_roll_no and class_id in target_class_ids:
+                                        continue
+
+                                    # In replace mode, ignore matches that already belong to this same student.
+                                    if allow_replace and existing_roll_no == normalized_roll_no:
+                                        continue
+
                                     existing_registration = {
                                         'student_name': existing_student.get('name', 'Unknown'),
                                         'student_roll': existing_student.get('roll_no', 'Unknown'),

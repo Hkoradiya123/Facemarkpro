@@ -404,11 +404,11 @@ function SkeletonBlock({ className = "" }) {
   return <div className={`skeleton-block ${className}`.trim()} />;
 }
 
-function TableSkeleton({ rows = 5, columns = 4 }) {
+function TableSkeleton({ rows = 5, columns = 4, className = "" }) {
   const rowStyle = { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` };
 
   return (
-    <div className="table-wrap skeleton-table-wrap">
+    <div className={`table-wrap skeleton-table-wrap ${className}`.trim()}>
       <div className="table-skeleton-grid" role="presentation">
         <div className="table-skeleton-row table-skeleton-row-head" style={rowStyle}>
           {Array.from({ length: columns }, (_, index) => (

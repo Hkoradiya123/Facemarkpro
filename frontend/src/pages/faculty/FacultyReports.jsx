@@ -2,7 +2,42 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FaFileArrowDown, FaFilter } from "react-icons/fa6";
 import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { facultyNav } from "../../utils/constants";
-import { PageShell, SectionCard, FilterSkeleton, TableSkeleton } from "../../components/Shared";
+import { PageShell, SectionCard, FilterSkeleton, SkeletonBlock } from "../../components/Shared";
+
+function ReportsSummarySkeleton({ rows = 4 }) {
+  return (
+    <div className="table-wrap skeleton-table-wrap reports-summary-skeleton-shell">
+      <table className="admin-table reports-summary-skeleton-table" aria-hidden="true">
+        <thead>
+          <tr>
+            <th>Roll No</th>
+            <th>Name</th>
+            <th>Branch</th>
+            <th>Sem</th>
+            <th>Sec</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, rowIndex) => (
+            <tr key={`faculty-report-skeleton-row-${rowIndex}`}>
+              <td><SkeletonBlock className="skeleton-line report-cell-roll" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-name" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-branch" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-num" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-num" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-num" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-num" /></td>
+              <td><SkeletonBlock className="skeleton-line report-cell-percent" /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -192,7 +227,7 @@ function FacultyReports() {
 
       <SectionCard title="Summary" className="report-card report-main-table-card">
         {loading ? (
-          <TableSkeleton rows={4} columns={8} />
+          <ReportsSummarySkeleton rows={4} />
         ) : (
           <div className="table-wrap">
             <table className="admin-table">

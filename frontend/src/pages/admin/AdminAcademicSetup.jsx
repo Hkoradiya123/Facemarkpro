@@ -3,7 +3,7 @@ import { FaBook, FaBuilding, FaChartLine, FaPencil, FaPlus, FaTrash, FaUsers } f
 
 import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
-import { PageShell, SectionCard, StatGrid, TableSkeleton } from "../../components/Shared";
+import { PageShell, SectionCard, SkeletonBlock, StatGrid } from "../../components/Shared";
 
 const TABS = [
   { id: "branches", label: "Branches", singular: "Branch" },
@@ -20,6 +20,42 @@ const EMPTY_FORMS = {
   subjects: { id: "", code: "", name: "", branch: "", semester: "", type: "theory", active: true },
   assignments: { id: "", faculty_email: "", branch: "", semester: "", section: "", subject_code: "", classroom: "", active: true, class_value: "" },
 };
+
+function AcademicSetupSkeleton({ columns, rows = 6 }) {
+  return (
+    <div className="table-wrap skeleton-table-wrap setup-table-skeleton-shell">
+      <table className="admin-table setup-table-skeleton-table" aria-hidden="true">
+        <thead>
+          <tr>
+            {columns.map((column) => (
+              <th key={`setup-head-${column}`}>{column}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, rowIndex) => (
+            <tr key={`setup-skeleton-row-${rowIndex}`}>
+              {columns.map((column, columnIndex) => (
+                <td key={`setup-skeleton-cell-${rowIndex}-${column}`}>
+                  {columnIndex === columns.length - 1 ? (
+                    <div className="setup-cell-actions">
+                      <SkeletonBlock className="skeleton-block setup-action-dot" />
+                      <SkeletonBlock className="skeleton-block setup-action-dot" />
+                    </div>
+                  ) : column.toLowerCase().includes("status") ? (
+                    <SkeletonBlock className="skeleton-line setup-cell-status" />
+                  ) : (
+                    <SkeletonBlock className={`skeleton-line${columnIndex === 0 ? " setup-cell-primary" : " setup-cell-regular"}`} />
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function AdminAcademicSetup() {
   const profile = useSessionProfile("admin");
@@ -268,7 +304,7 @@ function AdminAcademicSetup() {
         </div>
 
         {actionMessage ? <p className="success-copy">{actionMessage}</p> : null}
-        {loading ? <TableSkeleton rows={6} columns={activeTab === "subjects" ? 7 : 6} /> : error ? <p className="error-copy">{error}</p> : (
+        {loading ? <AcademicSetupSkeleton rows={6} columns={renderColumns()} /> : error ? <p className="error-copy">{error}</p> : (
           currentItems.length ? <div className="table-wrap"><table className="admin-table"><thead><tr>{renderColumns().map((column) => <th key={column}>{column}</th>)}</tr></thead><tbody>{renderRows().map((row, rowIndex) => <tr key={`${activeTab}-${rowIndex}`}>{row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>)}</tr>)}</tbody></table></div> : <p className="muted-copy">No {activeTab} added yet.</p>
         )}
       </SectionCard>

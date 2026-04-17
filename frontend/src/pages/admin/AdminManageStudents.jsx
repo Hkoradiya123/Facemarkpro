@@ -5,7 +5,45 @@ import {
 } from "react-icons/fa6";
 import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
-import { PageShell, SectionCard, TableSkeleton } from "../../components/Shared";
+import { PageShell, SectionCard, SkeletonBlock } from "../../components/Shared";
+
+function StudentsListSkeleton({ rows = 6 }) {
+  return (
+    <div className="table-wrap skeleton-table-wrap students-table-skeleton-shell">
+      <table className="admin-table students-table-skeleton-table" aria-hidden="true">
+        <thead>
+          <tr>
+            <th>Roll Number</th>
+            <th>Name</th>
+            <th>Branch</th>
+            <th>Semester / Section</th>
+            <th>Face</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, rowIndex) => (
+            <tr key={`students-skeleton-row-${rowIndex}`}>
+              <td><SkeletonBlock className="skeleton-line students-cell-roll" /></td>
+              <td><SkeletonBlock className="skeleton-line students-cell-name" /></td>
+              <td><SkeletonBlock className="skeleton-line students-cell-branch" /></td>
+              <td><SkeletonBlock className="skeleton-line students-cell-sem" /></td>
+              <td><SkeletonBlock className="skeleton-line students-cell-face" /></td>
+              <td>
+                <div className="students-cell-actions">
+                  <SkeletonBlock className="skeleton-block students-action-dot" />
+                  <SkeletonBlock className="skeleton-block students-action-dot" />
+                  <SkeletonBlock className="skeleton-block students-action-wide" />
+                  <SkeletonBlock className="skeleton-block students-action-dot" />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function AdminManageStudents() {
   const navigate = useNavigate();
@@ -194,7 +232,7 @@ function AdminManageStudents() {
         {actionMessage ? <p className="success-copy">{actionMessage}</p> : null}
 
         {loading ? (
-          <TableSkeleton rows={6} columns={6} />
+          <StudentsListSkeleton rows={6} />
         ) : error ? (
           <p className="error-copy">{error}</p>
         ) : paginatedStudents.length === 0 ? (

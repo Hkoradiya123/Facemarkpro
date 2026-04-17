@@ -367,6 +367,28 @@ body.dark .admin-overview-table-link {
   color: #7dd3fc;
 }
 
+body.dark .admin-overview-areas-card .simple-table th {
+  background: transparent;
+}
+
+body.dark .admin-overview-areas-card .simple-table td {
+  background: rgba(15, 23, 42, 0.94);
+  border-top-color: rgba(71, 85, 105, 0.72);
+  border-bottom-color: rgba(71, 85, 105, 0.72);
+}
+
+body.dark .admin-overview-areas-card .simple-table tbody tr td:first-child {
+  border-left-color: rgba(71, 85, 105, 0.72);
+}
+
+body.dark .admin-overview-areas-card .simple-table tbody tr td:last-child {
+  border-right-color: rgba(71, 85, 105, 0.72);
+}
+
+body.dark .admin-overview-areas-card .simple-table tbody tr:hover td {
+  background: rgba(30, 41, 59, 0.96);
+}
+
 body.dark .academic-setup-tab {
   background: rgba(15, 23, 42, 0.82);
   border-color: rgba(71, 85, 105, 0.8);
@@ -383,7 +405,7 @@ body.dark .manual-attendance-table,
 body.dark .manual-mark-table,
 body.dark .simple-table,
 body.dark .matrix-table {
-  background: var(--ui-card);
+  background: transparent;
   color: var(--ui-text);
 }
 
@@ -661,7 +683,6 @@ body.dark .widget-picker-item:hover {
 }
 
 body.dark .table-wrap,
-body.dark .admin-table tbody tr,
 body.dark .manual-attendance-table tbody tr,
 body.dark .manual-mark-table tbody tr {
   background: transparent;
@@ -670,7 +691,25 @@ body.dark .manual-mark-table tbody tr {
 body.dark .admin-table tbody tr:hover,
 body.dark .manual-attendance-table tbody tr:hover,
 body.dark .manual-mark-table tbody tr:hover {
-  background: rgba(148, 163, 184, 0.08);
+  background: transparent;
+}
+
+body.dark .admin-table td {
+  background: rgba(15, 23, 42, 0.94);
+  border-top-color: rgba(71, 85, 105, 0.72);
+  border-bottom-color: rgba(71, 85, 105, 0.72);
+}
+
+body.dark .admin-table tbody tr td:first-child {
+  border-left-color: rgba(71, 85, 105, 0.72);
+}
+
+body.dark .admin-table tbody tr td:last-child {
+  border-right-color: rgba(71, 85, 105, 0.72);
+}
+
+body.dark .admin-table tbody tr:hover td {
+  background: rgba(30, 41, 59, 0.96);
 }
 
 .admin-form-modal {
