@@ -63,7 +63,7 @@ function AttendanceResult() {
             <div className="attendance-result-actions mt-2 flex flex-wrap gap-3 max-[640px]:flex-col max-[640px]:items-stretch">
               <Link
                 to="/faculty/attendance"
-                className="primary-btn inline-flex items-center gap-2 rounded-xl border-0 bg-[linear-gradient(135deg,#4facfe,#00c6fb)] px-[18px] py-3 text-white shadow-[0_10px_24px_rgba(79,172,254,0.22)]"
+                className="primary-btn inline-flex items-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
               >
                 <FaUsersViewfinder /> New Session
               </Link>
