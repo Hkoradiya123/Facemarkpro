@@ -17,3 +17,12 @@
   --color-brand-from: #4facfe;
   --color-brand-to: #00f2fe;
 }
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
