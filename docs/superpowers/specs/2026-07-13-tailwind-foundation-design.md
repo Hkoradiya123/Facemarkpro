@@ -55,9 +55,14 @@ Goal of the overall initiative (this is Phase 1 of 5): migrate the UI to Tailwin
   --ease-motion-bounce: 420ms cubic-bezier(0.2, 0.85, 0.24, 1.08);
 }
 ```
-`main.jsx` replaces the `import "./styles.css"` line with `import "./styles/tailwind.css"`. The old `styles.css` aggregator and the 8 numbered files + 2 page-specific files remain on disk, unimported, until Phase 5.
+**Correction found during plan-writing:** `styles.css` (the legacy aggregator) is not exclusive to `Shared.jsx` — 3 other numbered CSS files (`06-admin-shared.css`, `07-reports-theme-dark.css`, `08-responsive.css`) target the exact classnames `Shared.jsx` emits today (e.g. `.content-card.wide`, dark-theme overrides on `.stat-card`, responsive rules on `.portal-sidebar`) to style the 31 pages this phase does not touch. Two changes to the plan above, to avoid breaking those pages between Phase 1 and Phase 5:
 
-**Dark mode:** `darkMode: 'selector'` behavior comes for free from Tailwind v4's `dark:` variant working off a `.dark` ancestor class. `PageShell`'s theme state logic changes from toggling `document.body.classList` to toggling `document.documentElement.classList`, keeping the same localStorage persistence key (`THEME_KEY`) and toggle UX. Every migrated component pairs each light-mode utility with an explicit `dark:` utility (e.g. `bg-white dark:bg-slate-900`) reproducing the current `body.light`/`body.dark` values from `01-base.css`.
+- `main.jsx` imports **both** stylesheets — `styles.css` first, then `styles/tailwind.css` second, so Tailwind utilities win the cascade for any overlapping property (same-specificity single-class selectors, later source wins) without removing legacy rules other pages still need. `styles.css` is only removed in Phase 5.
+- Migrated components keep their original legacy classname **in addition to** the new Tailwind utility classes (e.g. `className="content-card bg-ui-card dark:bg-ui-card-dark rounded-[18px] p-6 ..."`). This lets unmigrated pages' override rules keep matching, while the Tailwind utilities (loaded later) take over the base visual properties this phase controls. Legacy classnames are dropped only when a page migrates in Phases 2–4.
+
+**Dark mode:** `darkMode: 'selector'` behavior comes for free from Tailwind v4's `dark:` variant working off a `.dark` ancestor class. Every migrated component pairs each light-mode utility with an explicit `dark:` utility (e.g. `bg-white dark:bg-slate-900`) reproducing the current `body.light`/`body.dark` values from `01-base.css`.
+
+**Correction found during plan-writing:** the 31 unmigrated pages' CSS reads theme state exclusively through the `--ui-*` custom properties, which are only redefined under `body.light`/`body.dark` selectors (`01-base.css:42-64`) — not under any `<html>` selector. If `PageShell`'s toggle moved the class purely to `document.documentElement`, every unmigrated page would lose dark mode entirely. So during the Phase 1–4 bridge, `PageShell`'s toggle sets the theme class on **both** `document.documentElement` (new, drives Tailwind `dark:` utilities) and `document.body` (kept, drives the legacy `--ui-*` variables other pages still use) — same localStorage key (`THEME_KEY`), same toggle UX. The `document.body` half of this is removed in Phase 5 once no page depends on `--ui-*` anymore.
 
 ## Components
 
@@ -77,7 +82,7 @@ Each component's JSX is rewritten to use Tailwind utility classes instead of the
 
 ## Error handling
 
-No new failure modes are introduced — this phase does not touch data fetching or business logic. The only runtime behavior change is the dark-mode class target (`body` → `html`); if `THEME_KEY` in localStorage holds a stale value from before this change, it's read the same way (`"light"` / `"dark"` string), so no migration of stored data is needed.
+No new failure modes are introduced — this phase does not touch data fetching or business logic. The dark-mode class is now applied to both `document.body` (legacy, still read by unmigrated pages) and `document.documentElement` (new, read by Tailwind `dark:` utilities); if `THEME_KEY` in localStorage holds a stale value from before this change, it's read the same way (`"light"` / `"dark"` string), so no migration of stored data is needed.
 
 ## Testing / verification
 
