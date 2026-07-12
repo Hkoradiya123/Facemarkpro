@@ -21,7 +21,11 @@ function FacultyStudents() {
       title="Students"
       subtitle="Faculty-side student directory."
       profile={profile}
-      actions={<button className="primary-btn">Export CSV</button>}
+      actions={
+        <button className="primary-btn cursor-pointer rounded-xl border-0 bg-[linear-gradient(135deg,#4facfe,#00c6fb)] px-[18px] py-3 text-white shadow-[0_10px_24px_rgba(79,172,254,0.22)]">
+          Export CSV
+        </button>
+      }
     >
       <SectionCard title="Class Roster">
         <SimpleTable
