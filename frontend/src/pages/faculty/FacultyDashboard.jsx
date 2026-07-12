@@ -544,19 +544,27 @@ function FacultyDashboard() {
       actions={
         <Fragment>
           <button
-            className="pagination-btn mobile-layout-toggle"
+            className="pagination-btn mobile-layout-toggle hidden items-center gap-2 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark max-[768px]:inline-flex"
             type="button"
             onClick={() => setIsMobileLayoutLocked((current) => !current)}
           >
             {isMobileLayoutLocked ? <FaLock /> : <FaLockOpen />} {isMobileLayoutLocked ? "Locked" : "Unlocked"}
           </button>
-          <button className="pagination-btn" type="button" onClick={handleResetLayout}>
+          <button
+            className="pagination-btn inline-flex items-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+            type="button"
+            onClick={handleResetLayout}
+          >
             <FaRotateLeft /> Reset Layout
           </button>
         </Fragment>
       }
       sidebarAction={
-        <button className="widget-add-trigger" type="button" onClick={() => setIsPickerOpen(true)}>
+        <button
+          className="widget-add-trigger inline-grid h-11 w-11 flex-shrink-0 cursor-pointer place-items-center rounded-full border-2 border-blue-700 bg-white text-[22px] text-blue-700 transition-[transform,box-shadow,background,border-color,color] duration-[420ms] ease-[cubic-bezier(0.2,0.85,0.24,1.08)] hover:-translate-y-0.5 hover:scale-105 hover:bg-blue-50 hover:shadow-[0_12px_24px_rgba(25,118,210,0.16)] active:scale-[0.97] [&>svg]:h-5 [&>svg]:w-5"
+          type="button"
+          onClick={() => setIsPickerOpen(true)}
+        >
           <FaPlus />
         </button>
       }
@@ -665,28 +673,39 @@ function FacultyDashboard() {
       </ResponsiveGridLayout>
 
       {isPickerOpen ? (
-        <div className="widget-picker-overlay" onClick={() => setIsPickerOpen(false)} aria-hidden="true">
-          <div className="widget-picker-modal" onClick={(event) => event.stopPropagation()}>
-            <h2>Add Widgets</h2>
-            <p>Select widgets to add to your dashboard</p>
-            <div className="widget-picker-grid">
+        <div
+          className="widget-picker-overlay fixed inset-0 z-[1400] grid place-items-center bg-slate-900/38 backdrop-blur-sm"
+          onClick={() => setIsPickerOpen(false)}
+          aria-hidden="true"
+        >
+          <div
+            className="widget-picker-modal max-h-[min(720px,calc(100vh-32px))] w-[min(880px,calc(100vw-32px))] overflow-auto rounded-[22px] bg-white p-[34px_36px] shadow-[0_24px_80px_rgba(15,23,42,0.18)] dark:bg-ui-card-dark dark:text-ui-text-dark"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="m-[0_0_8px] text-left text-[30px]">Add Widgets</h2>
+            <p className="m-[0_0_22px] text-[#475569] dark:text-ui-text-muted-dark">Select widgets to add to your dashboard</p>
+            <div className="widget-picker-grid grid grid-cols-3 gap-[18px] max-[992px]:grid-cols-2">
               {facultyWidgetCatalog.map((widget) => {
                 const isAdded = !availableWidgets.some((available) => available.id === widget.id);
                 return (
                   <button
                     key={widget.id}
                     type="button"
-                    className={`widget-picker-item${isAdded ? " disabled" : ""}`}
+                    className={`widget-picker-item${isAdded ? " disabled" : ""} flex min-h-[104px] cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-[#dbe4ee] bg-white p-[18px] transition-[transform,box-shadow,border-color,background] duration-[240ms] hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_12px_30px_rgba(59,130,246,0.12)] disabled:cursor-not-allowed disabled:opacity-45`}
                     onClick={() => !isAdded && handleAddWidget(widget)}
                     disabled={isAdded}
                   >
-                    <span className="widget-picker-icon">{widget.icon}</span>
+                    <span className="widget-picker-icon grid h-[46px] w-[46px] place-items-center rounded-2xl bg-blue-400/[0.14] text-sm font-bold text-blue-500">{widget.icon}</span>
                     <strong>{widget.title}</strong>
                   </button>
                 );
               })}
             </div>
-            <button className="widget-picker-close" type="button" onClick={() => setIsPickerOpen(false)}>
+            <button
+              className="widget-picker-close mt-[18px] cursor-pointer rounded-[10px] border-0 bg-gray-500 px-4 py-3 text-white transition-[transform,background,box-shadow] duration-[160ms] hover:-translate-y-px hover:bg-gray-600 hover:shadow-[0_12px_24px_rgba(75,85,99,0.22)]"
+              type="button"
+              onClick={() => setIsPickerOpen(false)}
+            >
               Close
             </button>
           </div>
