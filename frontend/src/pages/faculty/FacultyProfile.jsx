@@ -76,6 +76,9 @@ function sortTimetableSlots(slots) {
   });
 }
 
+const TIMETABLE_FIELD_LABEL_CLASS =
+  "field-label text-ui-text dark:text-ui-text-dark [&>select]:w-full [&>select]:rounded-2xl [&>select]:border [&>select]:border-slate-400/26 [&>select]:bg-slate-50/92 [&>select]:p-[14px_16px] [&>select]:text-slate-900 [&>select]:focus:border-blue-500/56 [&>select]:focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] [&>select]:focus:bg-white [&>select]:focus:outline-none dark:[&>select]:border-slate-600/80 dark:[&>select]:bg-slate-900/85 dark:[&>select]:text-ui-text-dark [&>span]:text-xs [&>span]:font-bold [&>span]:uppercase [&>span]:tracking-[0.06em] [&>span]:text-ui-text-muted dark:[&>span]:text-ui-text-muted-dark";
+
 function FacultyProfile() {
   const profile = useSessionProfile("faculty");
   const [details, setDetails] = useState(() => ({
@@ -833,114 +836,133 @@ function FacultyProfile() {
       subtitle="Personal details, profile photo settings, and your own timetable."
       profile={profile}
     >
-      <section className="faculty-profile-shell">
-        <div className="faculty-profile-hero">
-          <div className="faculty-profile-photo-card">
-            <div className="faculty-profile-photo-frame">
+      <section className="faculty-profile-shell grid gap-6">
+        <div className="faculty-profile-hero grid grid-cols-[minmax(280px,340px)_minmax(0,1fr)] items-stretch gap-6 max-[992px]:grid-cols-1">
+          <div className="faculty-profile-photo-card flex flex-col gap-4 rounded-3xl border border-slate-400/[0.16] bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.18),transparent_42%),linear-gradient(145deg,#ffffff_0%,#f6fbff_100%)] p-[22px] shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+            <div className="faculty-profile-photo-frame grid aspect-square w-full place-items-center overflow-hidden rounded-[28px] border border-blue-500/[0.18] bg-[radial-gradient(circle_at_30%_25%,rgba(125,211,252,0.4),rgba(59,130,246,0.1)_48%,transparent_70%),linear-gradient(145deg,#dbeafe_0%,#eff6ff_100%)] text-[88px] font-extrabold text-blue-700 dark:bg-[radial-gradient(circle_at_30%_25%,rgba(56,189,248,0.18),rgba(14,116,144,0.14)_48%,transparent_70%),linear-gradient(145deg,#1e293b_0%,#0f172a_100%)] dark:text-sky-300">
               {details.photoPath ? (
-                <img src={details.photoPath} alt={details.name} className="faculty-profile-photo-image" />
+                <img src={details.photoPath} alt={details.name} className="faculty-profile-photo-image h-full w-full object-cover" />
               ) : (
                 <span>{(details.name || "F").slice(0, 1)}</span>
               )}
             </div>
-            <div className="faculty-profile-photo-actions">
-              <button type="button" className="primary-btn" onClick={() => openEditor("upload")}>
+            <div className="faculty-profile-photo-actions grid gap-2.5">
+              <button
+                type="button"
+                className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                onClick={() => openEditor("upload")}
+              >
                 <FaCloudArrowUp /> Upload New Photo
               </button>
-              <button type="button" className="pagination-btn" onClick={() => openEditor("camera")}>
+              <button
+                type="button"
+                className="pagination-btn inline-flex items-center justify-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+                onClick={() => openEditor("camera")}
+              >
                 <FaCamera /> Use Camera
               </button>
             </div>
           </div>
 
-          <div className="faculty-profile-hero-copy">
-            <span className="faculty-profile-kicker">Faculty Profile</span>
-            <h2>{details.name}</h2>
-            <p>Keep your profile polished with a clear photo, updated details, and a timetable you can manage yourself whenever lectures change.</p>
-            {actionMessage ? <div className="faculty-profile-success">{actionMessage}</div> : null}
-            <div className="faculty-profile-meta-grid">
+          <div className="faculty-profile-hero-copy rounded-3xl border border-slate-400/[0.16] bg-[radial-gradient(circle_at_top_right,rgba(244,114,182,0.12),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.1),transparent_28%),linear-gradient(160deg,#ffffff_0%,#f8fbff_100%)] p-7 shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+            <span className="faculty-profile-kicker inline-flex rounded-full bg-blue-600/[0.12] px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-blue-700">Faculty Profile</span>
+            <h2 className="m-[14px_0_10px] text-[clamp(2rem,3vw,3rem)] leading-[1.02] tracking-[-0.04em] text-slate-900 dark:text-ui-text-dark">{details.name}</h2>
+            <p className="m-0 max-w-[62ch] leading-[1.65] text-slate-600 dark:text-ui-text-muted-dark">Keep your profile polished with a clear photo, updated details, and a timetable you can manage yourself whenever lectures change.</p>
+            {actionMessage ? <div className="faculty-profile-success mt-4 rounded-2xl border border-emerald-500/[0.18] bg-emerald-500/[0.12] px-3.5 py-3 font-semibold text-emerald-800">{actionMessage}</div> : null}
+            <div className="faculty-profile-meta-grid mt-[22px] grid grid-cols-2 gap-3.5">
               {isProfileLoading
                 ? Array.from({ length: 6 }).map((_, index) => (
-                    <article key={`profile-skeleton-${index}`} className="faculty-profile-meta-card is-loading">
-                      <span className="skeleton-line skeleton-label" />
-                      <strong className="skeleton-line skeleton-text" />
+                    <article key={`profile-skeleton-${index}`} className="faculty-profile-meta-card is-loading grid min-h-[108px] content-start gap-2 rounded-2xl border border-slate-400/[0.16] bg-white/88 p-[16px_18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] pointer-events-none dark:border-ui-border-dark dark:bg-ui-card-dark">
+                      <span className="skeleton-line skeleton-label h-3 w-[42%] rounded-full" />
+                      <strong className="skeleton-line skeleton-text h-3.5 w-[86%] rounded-full" />
                     </article>
                   ))
                 : infoCards.map((item) => {
                     const Icon = item.icon;
                     return (
-                      <article key={item.label} className={`faculty-profile-meta-card${item.wide ? " wide" : ""}`}>
-                        <span>
+                      <article
+                        key={item.label}
+                        className={`faculty-profile-meta-card${item.wide ? " wide col-span-2" : ""} grid min-h-[108px] content-start gap-2 rounded-2xl border border-slate-400/[0.16] bg-white/88 p-[16px_18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-ui-border-dark dark:bg-ui-card-dark`}
+                      >
+                        <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.06em] text-slate-500 [&>svg]:flex-shrink-0 [&>svg]:text-[13px] [&>svg]:text-blue-500">
                           {Icon ? <Icon /> : null}
                           {item.label}
                         </span>
-                        <strong>{item.value}</strong>
+                        <strong className="break-words text-base leading-[1.35] text-slate-900 dark:text-ui-text-dark">{item.value}</strong>
                       </article>
                     );
                   })}
             </div>
-            <div className="faculty-profile-inline-actions">
-              <button type="button" className="primary-btn" onClick={() => setIsEditingInfo(true)}>
+            <div className="faculty-profile-inline-actions mt-[18px] flex justify-start">
+              <button
+                type="button"
+                className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                onClick={() => setIsEditingInfo(true)}
+              >
                 <FaPenToSquare /> Edit Information
               </button>
             </div>
           </div>
         </div>
 
-        <section className="faculty-timetable-panel">
-          <div className="faculty-timetable-header">
+        <section className="faculty-timetable-panel grid gap-5 rounded-3xl border border-slate-400/[0.16] bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.12),transparent_32%),linear-gradient(160deg,#ffffff_0%,#f8fbff_100%)] p-[26px] shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+          <div className="faculty-timetable-header flex items-start justify-between gap-[18px] max-[992px]:flex-col">
             <div>
-              <span className="faculty-profile-kicker">My Timetable</span>
-              <h3>Manage your lecture slots</h3>
-              <p>Add, update, or remove your own timetable entries here. Dashboard widgets and attendance flows will pick up the same data.</p>
+              <span className="faculty-profile-kicker inline-flex rounded-full bg-blue-600/[0.12] px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-blue-700">My Timetable</span>
+              <h3 className="m-[12px_0_8px] text-[clamp(1.4rem,2vw,1.9rem)] text-slate-900 dark:text-ui-text-dark">Manage your lecture slots</h3>
+              <p className="m-0 max-w-[70ch] leading-[1.6] text-slate-600 dark:text-ui-text-muted-dark">Add, update, or remove your own timetable entries here. Dashboard widgets and attendance flows will pick up the same data.</p>
             </div>
-            <button type="button" className="primary-btn" onClick={() => openTimetableEditor()}>
+            <button
+              type="button"
+              className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+              onClick={() => openTimetableEditor()}
+            >
               <FaPlus /> Add Slot
             </button>
           </div>
 
-          <div className="faculty-timetable-summary">
-            <article className="faculty-timetable-summary-card">
-              <span>Total Slots</span>
-              <strong>{timetableSummary.total}</strong>
+          <div className="faculty-timetable-summary grid grid-cols-3 gap-3.5 max-[640px]:grid-cols-1">
+            <article className="faculty-timetable-summary-card grid gap-2 rounded-[20px] border border-slate-400/[0.16] bg-white/88 p-[16px_18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+              <span className="text-xs font-bold uppercase tracking-[0.06em] text-slate-500">Total Slots</span>
+              <strong className="text-[1.2rem] text-slate-900 dark:text-ui-text-dark">{timetableSummary.total}</strong>
             </article>
-            <article className="faculty-timetable-summary-card">
-              <span>Active Days</span>
-              <strong>{timetableSummary.activeDays}</strong>
+            <article className="faculty-timetable-summary-card grid gap-2 rounded-[20px] border border-slate-400/[0.16] bg-white/88 p-[16px_18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+              <span className="text-xs font-bold uppercase tracking-[0.06em] text-slate-500">Active Days</span>
+              <strong className="text-[1.2rem] text-slate-900 dark:text-ui-text-dark">{timetableSummary.activeDays}</strong>
             </article>
-            <article className="faculty-timetable-summary-card">
-              <span>First Slot</span>
-              <strong>{timetableSummary.firstSlot}</strong>
+            <article className="faculty-timetable-summary-card grid gap-2 rounded-[20px] border border-slate-400/[0.16] bg-white/88 p-[16px_18px] shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+              <span className="text-xs font-bold uppercase tracking-[0.06em] text-slate-500">First Slot</span>
+              <strong className="text-[1.2rem] text-slate-900 dark:text-ui-text-dark">{timetableSummary.firstSlot}</strong>
             </article>
           </div>
 
-          {timetableError && !isEditingTimetable ? <p className="error-copy">{timetableError}</p> : null}
+          {timetableError && !isEditingTimetable ? <p className="error-copy rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{timetableError}</p> : null}
 
-          <div className="faculty-timetable-matrix-shell">
+          <div className="faculty-timetable-matrix-shell overflow-hidden rounded-[22px] border border-slate-400/[0.16] bg-white/78 dark:border-ui-border-dark dark:bg-ui-card-dark">
             {isTimetableLoading ? (
-              <div className="faculty-timetable-matrix-loading">
-                <div className="skeleton-line skeleton-label" />
-                <div className="skeleton-line skeleton-text" />
-                <div className="skeleton-line skeleton-text" />
-                <div className="skeleton-line skeleton-text" />
+              <div className="faculty-timetable-matrix-loading grid gap-3 p-5">
+                <div className="skeleton-line skeleton-label h-3 w-[42%] rounded-full bg-[linear-gradient(90deg,#e9eef6_0%,#f7f9fc_50%,#e9eef6_100%)] bg-[length:200%_100%] [animation:skeleton-shimmer_1.3s_linear_infinite]" />
+                <div className="skeleton-line skeleton-text h-3.5 w-[86%] rounded-full bg-[linear-gradient(90deg,#e9eef6_0%,#f7f9fc_50%,#e9eef6_100%)] bg-[length:200%_100%] [animation:skeleton-shimmer_1.3s_linear_infinite]" />
+                <div className="skeleton-line skeleton-text h-3.5 w-[86%] rounded-full bg-[linear-gradient(90deg,#e9eef6_0%,#f7f9fc_50%,#e9eef6_100%)] bg-[length:200%_100%] [animation:skeleton-shimmer_1.3s_linear_infinite]" />
+                <div className="skeleton-line skeleton-text h-3.5 w-[86%] rounded-full bg-[linear-gradient(90deg,#e9eef6_0%,#f7f9fc_50%,#e9eef6_100%)] bg-[length:200%_100%] [animation:skeleton-shimmer_1.3s_linear_infinite]" />
               </div>
             ) : (
-              <div className="faculty-timetable-matrix-wrap">
-                <table className="faculty-timetable-matrix">
+              <div className="faculty-timetable-matrix-wrap overflow-auto">
+                <table className="faculty-timetable-matrix w-full min-w-[760px] border-collapse [&_td]:border [&_td]:border-slate-400/[0.16] [&_td]:p-0 [&_th]:border [&_th]:border-slate-400/[0.16] [&_th]:p-0">
                   <thead>
                     <tr>
-                      <th>Time</th>
+                      <th className="bg-slate-50/92 p-[14px_10px] text-center text-[0.8rem] font-bold uppercase tracking-[0.08em] text-slate-700 dark:bg-slate-800/70 dark:text-slate-300">Time</th>
                       {timetableDays.map((day) => (
-                        <th key={day}>{day.slice(0, 3)}</th>
+                        <th key={day} className="bg-slate-50/92 p-[14px_10px] text-center text-[0.8rem] font-bold uppercase tracking-[0.08em] text-slate-700 dark:bg-slate-800/70 dark:text-slate-300">{day.slice(0, 3)}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {timetableRows.map((row) => (
                       <tr key={`${row.start_time}-${row.end_time}`}>
-                        <th>
-                          <span>{row.start_time}</span>
-                          <small>{row.end_time}</small>
+                        <th className="w-[92px] min-w-[92px] bg-slate-50/72 p-[12px_10px] text-center text-slate-900 dark:bg-slate-900/78 dark:text-ui-text-dark">
+                          <span className="block font-bold">{row.start_time}</span>
+                          <small className="mt-1 block text-[0.76rem] text-slate-500">{row.end_time}</small>
                         </th>
                         {timetableDays.map((day) => {
                           const slot = timetableGridMap[`${day}|${row.start_time}|${row.end_time}`];
@@ -948,7 +970,11 @@ function FacultyProfile() {
                             <td key={`${day}-${row.start_time}-${row.end_time}`}>
                               <button
                                 type="button"
-                                className={`faculty-timetable-cell${slot ? " filled" : " empty"}`}
+                                className={`faculty-timetable-cell${slot ? " filled" : " empty"} grid min-h-[92px] w-full cursor-pointer place-content-center gap-1.5 border-0 bg-transparent p-[12px_10px] text-center transition-[background-color,transform,box-shadow] duration-[160ms] [&>strong]:block [&>strong]:overflow-hidden [&>strong]:text-ellipsis [&>strong]:whitespace-nowrap [&>strong]:text-[0.95rem] [&>strong]:text-slate-900 [&>span]:block [&>span]:overflow-hidden [&>span]:text-ellipsis [&>span]:whitespace-nowrap [&>span]:text-[0.86rem] [&>span]:text-slate-600 [&>small]:block [&>small]:overflow-hidden [&>small]:text-ellipsis [&>small]:whitespace-nowrap [&>small]:text-[0.76rem] [&>small]:text-slate-500 ${
+                                  slot
+                                    ? "hover:-translate-y-px hover:bg-[linear-gradient(180deg,#dbeeff_0%,#cde5fa_100%)] hover:shadow-[inset_0_0_0_1px_rgba(93,157,214,0.35)]"
+                                    : "bg-slate-50/58 hover:bg-blue-100/92 hover:shadow-[inset_0_0_0_1px_rgba(59,130,246,0.24)] [&>strong]:text-blue-600"
+                                }`}
                                 onClick={() =>
                                   openTimetableEditor(
                                     slot || {
@@ -989,31 +1015,58 @@ function FacultyProfile() {
       </section>
 
       {editorOpen ? (
-        <div className="photo-cropper-overlay" onMouseUp={handlePointerUp} onTouchEnd={handlePointerUp}>
-          <div className="photo-cropper-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="photo-cropper-header">
+        <div
+          className="photo-cropper-overlay fixed inset-0 z-[1700] grid place-items-center bg-slate-900/56 p-[18px] backdrop-blur-md"
+          onMouseUp={handlePointerUp}
+          onTouchEnd={handlePointerUp}
+        >
+          <div
+            className="photo-cropper-modal max-h-[calc(100vh-24px)] w-[min(1080px,calc(100vw-24px))] overflow-auto rounded-[28px] bg-ui-card p-6 shadow-[0_28px_80px_rgba(15,23,42,0.32)] dark:bg-ui-card-dark dark:text-ui-text-dark"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="photo-cropper-header flex items-center justify-between gap-4">
               <div>
-                <h3>Edit Profile Photo</h3>
-                <p>Upload or capture an image, then drag and zoom to crop it.</p>
+                <h3 className="m-[0_0_6px] text-[1.6rem]">Edit Profile Photo</h3>
+                <p className="m-0 text-ui-text-muted dark:text-ui-text-muted-dark">Upload or capture an image, then drag and zoom to crop it.</p>
               </div>
-              <button type="button" className="photo-cropper-close" onClick={closeEditor}>
+              <button
+                type="button"
+                className="photo-cropper-close h-[42px] w-[42px] cursor-pointer rounded-full border border-ui-border bg-ui-card-muted text-ui-text dark:border-ui-border-dark dark:bg-ui-card-muted-dark dark:text-ui-text-dark"
+                onClick={closeEditor}
+              >
                 <FaXmark />
               </button>
             </div>
 
-            <div className="photo-cropper-toolbar">
-              <button type="button" className={`photo-source-btn${editorMode === "upload" ? " active" : ""}`} onClick={() => resetEditorState("upload")}>
+            <div className="photo-cropper-toolbar my-[18px] flex items-center gap-3">
+              <button
+                type="button"
+                className={`photo-source-btn${editorMode === "upload" ? " active" : ""} inline-flex cursor-pointer items-center gap-2 rounded-full border px-3.5 py-2.5 ${
+                  editorMode === "upload"
+                    ? "border-blue-600/24 bg-blue-600/[0.12] text-blue-700"
+                    : "border-ui-border bg-ui-card-muted text-ui-text dark:border-ui-border-dark dark:bg-ui-card-muted-dark dark:text-ui-text-dark"
+                }`}
+                onClick={() => resetEditorState("upload")}
+              >
                 <FaCloudArrowUp /> Upload
               </button>
-              <button type="button" className={`photo-source-btn${editorMode === "camera" ? " active" : ""}`} onClick={() => resetEditorState("camera")}>
+              <button
+                type="button"
+                className={`photo-source-btn${editorMode === "camera" ? " active" : ""} inline-flex cursor-pointer items-center gap-2 rounded-full border px-3.5 py-2.5 ${
+                  editorMode === "camera"
+                    ? "border-blue-600/24 bg-blue-600/[0.12] text-blue-700"
+                    : "border-ui-border bg-ui-card-muted text-ui-text dark:border-ui-border-dark dark:bg-ui-card-muted-dark dark:text-ui-text-dark"
+                }`}
+                onClick={() => resetEditorState("camera")}
+              >
                 <FaCamera /> Camera
               </button>
             </div>
 
-            <div className="photo-cropper-body">
-              <div className="photo-cropper-stage-panel">
+            <div className="photo-cropper-body grid grid-cols-[minmax(0,1.2fr)_minmax(280px,360px)] gap-5 max-[992px]:grid-cols-1">
+              <div className="photo-cropper-stage-panel grid min-h-[520px] place-items-center rounded-3xl border border-slate-400/[0.18] bg-[linear-gradient(135deg,rgba(96,165,250,0.08),rgba(236,72,153,0.08)),linear-gradient(0deg,#f8fafc,#f8fafc)] p-6 dark:border-ui-border-dark dark:bg-[linear-gradient(135deg,rgba(96,165,250,0.08),rgba(236,72,153,0.08)),linear-gradient(0deg,#1f2937,#1f2937)]">
                 {!imageSource && editorMode === "upload" ? (
-                  <label className="photo-dropzone">
+                  <label className="photo-dropzone grid min-h-[320px] w-[min(100%,420px)] cursor-pointer place-items-center gap-2.5 rounded-3xl border-2 border-dashed border-blue-500/34 bg-white/60 p-6 text-center text-blue-600 [&>input]:hidden [&>svg]:text-[30px]">
                     <input type="file" accept="image/*" onChange={handleFileSelect} />
                     <FaCloudArrowUp />
                     <strong>Select a photo</strong>
@@ -1022,12 +1075,21 @@ function FacultyProfile() {
                 ) : null}
 
                 {!imageSource && editorMode === "camera" ? (
-                  <div className="photo-camera-panel">
-                    <div className="photo-camera-frame">
+                  <div className="photo-camera-panel grid w-full justify-items-center gap-3.5">
+                    <div className="photo-camera-frame relative aspect-square w-[min(100%,420px)] overflow-hidden rounded-[28px] bg-blue-100 dark:border dark:border-ui-border-dark dark:bg-ui-card-dark [&>video]:h-full [&>video]:w-full [&>video]:object-cover">
                       <video ref={videoRef} muted playsInline autoPlay />
-                      {isStartingCamera ? <div className="photo-camera-status">Starting camera...</div> : null}
+                      {isStartingCamera ? (
+                        <div className="photo-camera-status absolute inset-[auto_14px_14px_14px] rounded-2xl bg-slate-900/72 px-3 py-2.5 text-center font-semibold text-white">
+                          Starting camera...
+                        </div>
+                      ) : null}
                     </div>
-                    <button type="button" className="primary-btn" onClick={captureFromCamera} disabled={isStartingCamera}>
+                    <button
+                      type="button"
+                      className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                      onClick={captureFromCamera}
+                      disabled={isStartingCamera}
+                    >
                       <FaCamera /> Capture Photo
                     </button>
                   </div>
@@ -1036,46 +1098,69 @@ function FacultyProfile() {
                 {imageSource ? (
                   <div
                     ref={stageRef}
-                    className="photo-crop-stage"
+                    className="photo-crop-stage relative aspect-square w-[min(100%,420px)] cursor-grab touch-none select-none overflow-hidden rounded-[28px] bg-blue-100 active:cursor-grabbing dark:border dark:border-ui-border-dark dark:bg-ui-card-dark"
                     onMouseDown={handlePointerDown}
                     onMouseMove={handlePointerMove}
                     onMouseLeave={handlePointerUp}
                     onTouchStart={handlePointerDown}
                     onTouchMove={handlePointerMove}
                   >
-                    <img src={imageSource} alt="Crop preview" className="photo-crop-image" style={cropStyle} />
-                    <div className="photo-crop-mask" />
+                    <img
+                      src={imageSource}
+                      alt="Crop preview"
+                      className="photo-crop-image absolute left-1/2 top-1/2 h-full w-full origin-center -translate-x-1/2 -translate-y-1/2 object-cover"
+                      style={cropStyle}
+                    />
+                    <div className="photo-crop-mask pointer-events-none absolute inset-0 rounded-[28px] border-2 border-white/92 shadow-[inset_0_0_0_999px_rgba(15,23,42,0.2)]" />
                   </div>
                 ) : null}
               </div>
 
-              <div className="photo-cropper-controls">
-                <div className="photo-cropper-card">
-                  <div className="photo-cropper-card-head">
+              <div className="photo-cropper-controls grid gap-4">
+                <div className="photo-cropper-card grid gap-4 rounded-3xl border border-slate-400/[0.18] bg-ui-card-muted p-[18px] dark:border-ui-border-dark dark:bg-ui-card-muted-dark">
+                  <div className="photo-cropper-card-head flex items-center gap-2.5 text-slate-900 dark:text-ui-text-dark">
                     <FaCropSimple />
                     <strong>Crop Controls</strong>
                   </div>
-                  <label className="photo-slider-group">
-                    <span>Zoom</span>
-                    <input type="range" min="1" max="2.6" step="0.01" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} disabled={!imageSource} />
+                  <label className="photo-slider-group grid gap-2">
+                    <span className="font-semibold text-slate-600 dark:text-ui-text-muted-dark">Zoom</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="2.6"
+                      step="0.01"
+                      value={zoom}
+                      onChange={(event) => setZoom(Number(event.target.value))}
+                      disabled={!imageSource}
+                      className="w-full"
+                    />
                   </label>
-                  <div className="photo-cropper-actions">
-                    <button type="button" className="pagination-btn" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }} disabled={!imageSource}>
+                  <div className="photo-cropper-actions flex items-center">
+                    <button
+                      type="button"
+                      className="pagination-btn inline-flex items-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+                      onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+                      disabled={!imageSource}
+                    >
                       <FaRotateLeft /> Reset Crop
                     </button>
-                    <button type="button" className="pagination-btn" onClick={() => resetEditorState(editorMode)}>
+                    <button
+                      type="button"
+                      className="pagination-btn inline-flex items-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+                      onClick={() => resetEditorState(editorMode)}
+                    >
                       Choose Again
                     </button>
                   </div>
-                  {editorError ? <p className="error-copy">{editorError}</p> : null}
+                  {editorError ? <p className="error-copy rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{editorError}</p> : null}
                 </div>
 
-                <div className="photo-cropper-card">
-                  <div className="photo-cropper-card-head">
+                <div className="photo-cropper-card grid gap-4 rounded-3xl border border-slate-400/[0.18] bg-ui-card-muted p-[18px] dark:border-ui-border-dark dark:bg-ui-card-muted-dark">
+                  <div className="photo-cropper-card-head flex items-center gap-2.5 text-slate-900 dark:text-ui-text-dark">
                     <FaUser />
                     <strong>Preview Guidance</strong>
                   </div>
-                  <ul className="plain-list profile-plain-list">
+                  <ul className="plain-list profile-plain-list m-0 flex flex-col gap-2.5 pl-[18px]">
                     <li>Center your face inside the square crop area.</li>
                     <li>Use a little zoom so the face is clearly visible.</li>
                     <li>Camera capture and file upload both support the same crop flow.</li>
@@ -1084,11 +1169,20 @@ function FacultyProfile() {
               </div>
             </div>
 
-            <div className="photo-cropper-footer">
-              <button type="button" className="pagination-btn" onClick={closeEditor}>
+            <div className="photo-cropper-footer flex items-center justify-between gap-4">
+              <button
+                type="button"
+                className="pagination-btn inline-flex items-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+                onClick={closeEditor}
+              >
                 Cancel
               </button>
-              <button type="button" className="primary-btn" onClick={saveCroppedPhoto} disabled={!imageSource || isSaving}>
+              <button
+                type="button"
+                className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                onClick={saveCroppedPhoto}
+                disabled={!imageSource || isSaving}
+              >
                 <FaFloppyDisk /> {isSaving ? "Saving..." : "Save Photo"}
               </button>
             </div>
@@ -1097,42 +1191,58 @@ function FacultyProfile() {
       ) : null}
 
       {isEditingInfo ? (
-        <div className="photo-cropper-overlay">
-          <div className="photo-cropper-modal profile-edit-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="photo-cropper-header">
+        <div className="photo-cropper-overlay fixed inset-0 z-[1700] grid place-items-center bg-slate-900/56 p-[18px] backdrop-blur-md">
+          <div
+            className="photo-cropper-modal profile-edit-modal w-[min(760px,calc(100vw-24px))] max-h-[calc(100vh-24px)] overflow-auto rounded-[28px] bg-ui-card p-6 shadow-[0_28px_80px_rgba(15,23,42,0.32)] dark:bg-ui-card-dark dark:text-ui-text-dark"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="photo-cropper-header flex items-center justify-between gap-4">
               <div>
-                <h3>Edit Profile Information</h3>
-                <p>Update the faculty details shown on your profile page.</p>
+                <h3 className="m-[0_0_6px] text-[1.6rem]">Edit Profile Information</h3>
+                <p className="m-0 text-ui-text-muted dark:text-ui-text-muted-dark">Update the faculty details shown on your profile page.</p>
               </div>
-              <button type="button" className="photo-cropper-close" onClick={() => setIsEditingInfo(false)}>
+              <button
+                type="button"
+                className="photo-cropper-close h-[42px] w-[42px] cursor-pointer rounded-full border border-ui-border bg-ui-card-muted text-ui-text dark:border-ui-border-dark dark:bg-ui-card-muted-dark dark:text-ui-text-dark"
+                onClick={() => setIsEditingInfo(false)}
+              >
                 <FaXmark />
               </button>
             </div>
 
-            <div className="faculty-profile-form-grid">
-              <label className="field-label">
+            <div className="faculty-profile-form-grid mt-5 grid grid-cols-2 gap-4">
+              <label className="field-label text-ui-text dark:text-ui-text-dark [&>input]:w-full [&>input]:rounded-2xl [&>input]:border [&>input]:border-slate-400/26 [&>input]:bg-slate-50/92 [&>input]:p-[14px_16px] [&>input]:text-slate-900 [&>input]:focus:border-blue-500/56 [&>input]:focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] [&>input]:focus:bg-white [&>input]:focus:outline-none dark:[&>input]:border-slate-600/80 dark:[&>input]:bg-slate-900/85 dark:[&>input]:text-ui-text-dark [&>span]:text-xs [&>span]:font-bold [&>span]:uppercase [&>span]:tracking-[0.06em] [&>span]:text-ui-text-muted dark:[&>span]:text-ui-text-muted-dark">
                 <span>Full Name</span>
                 <input value={infoForm.name} onChange={(event) => setInfoForm((current) => ({ ...current, name: event.target.value }))} />
               </label>
-              <label className="field-label">
+              <label className="field-label text-ui-text dark:text-ui-text-dark [&>input]:w-full [&>input]:rounded-2xl [&>input]:border [&>input]:border-slate-400/26 [&>input]:bg-slate-50/92 [&>input]:p-[14px_16px] [&>input]:text-slate-900 [&>input]:focus:border-blue-500/56 [&>input]:focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] [&>input]:focus:bg-white [&>input]:focus:outline-none dark:[&>input]:border-slate-600/80 dark:[&>input]:bg-slate-900/85 dark:[&>input]:text-ui-text-dark [&>span]:text-xs [&>span]:font-bold [&>span]:uppercase [&>span]:tracking-[0.06em] [&>span]:text-ui-text-muted dark:[&>span]:text-ui-text-muted-dark">
                 <span>Phone</span>
                 <input value={infoForm.phone} onChange={(event) => setInfoForm((current) => ({ ...current, phone: event.target.value }))} />
               </label>
-              <label className="field-label">
+              <label className="field-label text-ui-text dark:text-ui-text-dark [&>input]:w-full [&>input]:rounded-2xl [&>input]:border [&>input]:border-slate-400/26 [&>input]:bg-slate-50/92 [&>input]:p-[14px_16px] [&>input]:text-slate-900 [&>input]:focus:border-blue-500/56 [&>input]:focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] [&>input]:focus:bg-white [&>input]:focus:outline-none dark:[&>input]:border-slate-600/80 dark:[&>input]:bg-slate-900/85 dark:[&>input]:text-ui-text-dark [&>span]:text-xs [&>span]:font-bold [&>span]:uppercase [&>span]:tracking-[0.06em] [&>span]:text-ui-text-muted dark:[&>span]:text-ui-text-muted-dark">
                 <span>Qualification</span>
                 <input value={infoForm.qualification} onChange={(event) => setInfoForm((current) => ({ ...current, qualification: event.target.value }))} />
               </label>
-              <label className="field-label faculty-profile-form-wide">
+              <label className="field-label faculty-profile-form-wide col-span-2 text-ui-text dark:text-ui-text-dark [&>textarea]:w-full [&>textarea]:min-h-[120px] [&>textarea]:resize-y [&>textarea]:rounded-2xl [&>textarea]:border [&>textarea]:border-slate-400/26 [&>textarea]:bg-slate-50/92 [&>textarea]:p-[14px_16px] [&>textarea]:text-slate-900 [&>textarea]:focus:border-blue-500/56 [&>textarea]:focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] [&>textarea]:focus:bg-white [&>textarea]:focus:outline-none dark:[&>textarea]:border-slate-600/80 dark:[&>textarea]:bg-slate-900/85 dark:[&>textarea]:text-ui-text-dark [&>span]:text-xs [&>span]:font-bold [&>span]:uppercase [&>span]:tracking-[0.06em] [&>span]:text-ui-text-muted dark:[&>span]:text-ui-text-muted-dark">
                 <span>Address</span>
                 <textarea rows={4} value={infoForm.address} onChange={(event) => setInfoForm((current) => ({ ...current, address: event.target.value }))} />
               </label>
             </div>
 
-            <div className="photo-cropper-footer">
-              <button type="button" className="pagination-btn" onClick={() => setIsEditingInfo(false)}>
+            <div className="photo-cropper-footer flex items-center justify-between gap-4">
+              <button
+                type="button"
+                className="pagination-btn inline-flex items-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+                onClick={() => setIsEditingInfo(false)}
+              >
                 Cancel
               </button>
-              <button type="button" className="primary-btn" onClick={saveProfileInfo} disabled={isSavingInfo}>
+              <button
+                type="button"
+                className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                onClick={saveProfileInfo}
+                disabled={isSavingInfo}
+              >
                 <FaFloppyDisk /> {isSavingInfo ? "Saving..." : "Save Changes"}
               </button>
             </div>
@@ -1141,21 +1251,24 @@ function FacultyProfile() {
       ) : null}
 
       {isEditingTimetable ? (
-        <div className="photo-cropper-overlay">
-          <div className="photo-cropper-modal profile-edit-modal faculty-timetable-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="photo-cropper-overlay fixed inset-0 z-[1700] grid place-items-center bg-slate-900/56 p-[18px] backdrop-blur-md">
+          <div
+            className="photo-cropper-modal profile-edit-modal faculty-timetable-modal w-[min(860px,calc(100vw-24px))] max-h-[calc(100vh-24px)] overflow-auto rounded-[28px] bg-ui-card p-6 shadow-[0_28px_80px_rgba(15,23,42,0.32)] dark:bg-ui-card-dark dark:text-ui-text-dark"
+            onClick={(event) => event.stopPropagation()}
+          >
             <form onSubmit={saveTimetableSlot}>
-              <div className="photo-cropper-header">
+              <div className="photo-cropper-header flex items-center justify-between gap-4">
                 <div>
-                  <h3>{timetableForm.id ? "Edit Timetable Slot" : "Add Timetable Slot"}</h3>
-                  <p>Set the day, time, class, and room for one lecture slot. Overlapping times for the same day are blocked automatically.</p>
+                  <h3 className="m-[0_0_6px] text-[1.6rem]">{timetableForm.id ? "Edit Timetable Slot" : "Add Timetable Slot"}</h3>
+                  <p className="m-0 text-ui-text-muted dark:text-ui-text-muted-dark">Set the day, time, class, and room for one lecture slot. Overlapping times for the same day are blocked automatically.</p>
                 </div>
-                <button type="button" className="photo-cropper-close" onClick={closeTimetableEditor}>
+                <button type="button" className="photo-cropper-close h-[42px] w-[42px] cursor-pointer rounded-full border border-ui-border bg-ui-card-muted text-ui-text dark:border-ui-border-dark dark:bg-ui-card-muted-dark dark:text-ui-text-dark" onClick={closeTimetableEditor}>
                   <FaXmark />
                 </button>
               </div>
 
-              <div className="faculty-timetable-form-grid">
-                <label className="field-label">
+              <div className="faculty-timetable-form-grid mt-5 grid grid-cols-3 gap-4 max-[992px]:grid-cols-1">
+                <label className={TIMETABLE_FIELD_LABEL_CLASS}>
                   <span>Day</span>
                   <select value={timetableForm.day} onChange={(event) => setTimetableForm((current) => ({ ...current, day: event.target.value }))}>
                     {TIMETABLE_DAYS.map((day) => (
@@ -1165,7 +1278,7 @@ function FacultyProfile() {
                     ))}
                   </select>
                 </label>
-                <label className="field-label">
+                <label className={TIMETABLE_FIELD_LABEL_CLASS}>
                   <span>Start Time</span>
                   <select value={timetableForm.start_time} onChange={(event) => setTimetableForm((current) => ({ ...current, start_time: event.target.value }))}>
                     {TIMETABLE_TIME_OPTIONS.map((time) => (
@@ -1175,7 +1288,7 @@ function FacultyProfile() {
                     ))}
                   </select>
                 </label>
-                <label className="field-label">
+                <label className={TIMETABLE_FIELD_LABEL_CLASS}>
                   <span>End Time</span>
                   <select value={timetableForm.end_time} onChange={(event) => setTimetableForm((current) => ({ ...current, end_time: event.target.value }))}>
                     {TIMETABLE_TIME_OPTIONS.map((time) => (
@@ -1185,7 +1298,7 @@ function FacultyProfile() {
                     ))}
                   </select>
                 </label>
-                <label className="field-label faculty-profile-form-wide">
+                <label className={`${TIMETABLE_FIELD_LABEL_CLASS} faculty-profile-form-wide col-span-3 max-[992px]:col-span-1`}>
                   <span>Subject</span>
                   <select
                     value={timetableForm.subject_value}
@@ -1217,7 +1330,7 @@ function FacultyProfile() {
                     })}
                   </select>
                 </label>
-                <label className="field-label">
+                <label className={TIMETABLE_FIELD_LABEL_CLASS}>
                   <span>Branch</span>
                   <select
                     value={timetableForm.branch}
@@ -1248,7 +1361,7 @@ function FacultyProfile() {
                     ))}
                   </select>
                 </label>
-                <label className="field-label">
+                <label className={TIMETABLE_FIELD_LABEL_CLASS}>
                   <span>Semester</span>
                   <select
                     value={timetableForm.semester}
@@ -1273,7 +1386,7 @@ function FacultyProfile() {
                     ))}
                   </select>
                 </label>
-                <label className="field-label">
+                <label className={TIMETABLE_FIELD_LABEL_CLASS}>
                   <span>Section</span>
                   <select
                     value={timetableForm.section}
@@ -1297,7 +1410,7 @@ function FacultyProfile() {
                     ))}
                   </select>
                 </label>
-                <label className="field-label faculty-profile-form-wide">
+                <label className={`${TIMETABLE_FIELD_LABEL_CLASS} faculty-profile-form-wide col-span-3 max-[992px]:col-span-1`}>
                   <span>Classroom</span>
                   <select value={timetableForm.classroom} onChange={(event) => setTimetableForm((current) => ({ ...current, classroom: event.target.value }))}>
                     <option value="">Select classroom</option>
@@ -1310,25 +1423,33 @@ function FacultyProfile() {
                 </label>
               </div>
 
-              {timetableError ? <p className="error-copy faculty-timetable-error">{timetableError}</p> : null}
+              {timetableError ? <p className="error-copy faculty-timetable-error mt-4 rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{timetableError}</p> : null}
 
-              <div className="photo-cropper-footer">
-                <div className="faculty-timetable-modal-actions">
+              <div className="photo-cropper-footer flex items-center justify-between gap-4">
+                <div className="faculty-timetable-modal-actions inline-flex items-center gap-3">
                   {timetableForm.id ? (
                     <button
                       type="button"
-                      className="pagination-btn danger-btn"
+                      className="pagination-btn danger-btn inline-flex items-center gap-1.5 rounded-md border border-red-400/26 bg-red-50/95 px-4 py-2 font-medium text-red-600 transition-[background,border-color,color,box-shadow] duration-[160ms]"
                       onClick={() => deleteTimetableSlot({ id: timetableForm.id, subject: timetableForm.subject, day: timetableForm.day })}
                       disabled={isDeletingTimetable === timetableForm.id}
                     >
                       <FaTrash /> {isDeletingTimetable === timetableForm.id ? "Deleting..." : "Delete Slot"}
                     </button>
                   ) : null}
-                  <button type="button" className="pagination-btn" onClick={closeTimetableEditor}>
+                  <button
+                    type="button"
+                    className="pagination-btn inline-flex items-center gap-1.5 rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark"
+                    onClick={closeTimetableEditor}
+                  >
                     Cancel
                   </button>
                 </div>
-                <button type="submit" className="primary-btn" disabled={isSavingTimetable}>
+                <button
+                  type="submit"
+                  className="primary-btn inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                  disabled={isSavingTimetable}
+                >
                   <FaFloppyDisk /> {isSavingTimetable ? "Saving..." : timetableForm.id ? "Update Slot" : "Add Slot"}
                 </button>
               </div>
