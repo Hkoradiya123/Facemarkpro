@@ -636,7 +636,15 @@ function FacultyDashboard() {
             setMobileWidgets(normalizeMobileStack(merged));
           }
 
-          dragSnapshotRef.current = null;
+          // react-grid-layout fires onLayoutChange synchronously right after
+          // onDragStop, before this state update has rendered. Clearing the
+          // ref immediately let that stray call's guard fall through and
+          // overwrite the restored/compacted layout above with a cruder
+          // compaction of the library's raw pre-restore layout. Defer the
+          // clear by one tick so that stray call is still skipped.
+          setTimeout(() => {
+            dragSnapshotRef.current = null;
+          }, 0);
         }}
         onLayoutChange={(layout, allLayouts) => {
           if (dragSnapshotRef.current) {
