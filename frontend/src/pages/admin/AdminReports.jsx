@@ -4,10 +4,13 @@ import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
 import { PageShell, SectionCard, FilterSkeleton, SkeletonBlock } from "../../components/Shared";
 
+const ADMIN_TABLE_CLASS =
+  "admin-table w-full border-separate [border-spacing:0_10px] bg-transparent [&_thead]:bg-transparent dark:[&_thead]:bg-slate-800 dark:[&_thead]:text-slate-300 [&_th]:p-[14px_16px] [&_th]:text-left [&_th]:text-[13px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.3px] [&_th]:text-slate-500 [&_th]:border-b-0 [&_tbody_tr]:transition-transform [&_tbody_tr]:duration-150 [&_tbody_tr:hover]:-translate-y-px [&_td]:border-y [&_td]:border-[#e2e8f0] [&_td]:bg-white [&_td]:p-[14px_16px] [&_td]:text-[14px] [&_td]:text-slate-700 dark:[&_td]:border-ui-border-dark dark:[&_td]:bg-transparent dark:[&_td]:text-ui-text-dark [&_tbody_tr_td:first-child]:rounded-l-[14px] [&_tbody_tr_td:first-child]:border-l [&_tbody_tr_td:last-child]:rounded-r-[14px] [&_tbody_tr_td:last-child]:border-r [&_tbody_tr:hover_td]:bg-[#f8fafc] dark:[&_tbody_tr:hover_td]:bg-slate-800/50";
+
 function ReportsSummarySkeleton({ rows = 4 }) {
   return (
-    <div className="table-wrap skeleton-table-wrap reports-summary-skeleton-shell">
-      <table className="admin-table reports-summary-skeleton-table" aria-hidden="true">
+    <div className="table-wrap skeleton-table-wrap reports-summary-skeleton-shell w-full max-w-full min-w-0 overflow-auto">
+      <table className={`${ADMIN_TABLE_CLASS} reports-summary-skeleton-table`} aria-hidden="true">
         <thead>
           <tr>
             <th>Roll No</th>
@@ -218,7 +221,7 @@ function AdminReports() {
       <div className="content-grid two report-split-grid grid grid-cols-2 gap-[18px] max-[992px]:grid-cols-1">
         <SectionCard title="Combined Subject Summary" className="report-card">
           <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
-            <table className="admin-table">
+            <table className={ADMIN_TABLE_CLASS}>
               <thead><tr><th>Subject</th><th>Present</th><th>Absent</th><th>%</th></tr></thead>
               <tbody>
                 {report.subject_summary.length ? report.subject_summary.map((row) => (
@@ -231,7 +234,7 @@ function AdminReports() {
 
         <SectionCard title="Student Detail" className="report-card">
           <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
-            <table className="admin-table">
+            <table className={ADMIN_TABLE_CLASS}>
               <thead><tr><th>Date</th><th>Subject</th><th>Status</th><th>Class</th></tr></thead>
               <tbody>
                 {report.detail_rows.length ? report.detail_rows.map((row, idx) => (
@@ -248,7 +251,7 @@ function AdminReports() {
           <ReportsSummarySkeleton rows={4} />
         ) : (
           <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
-            <table className="admin-table">
+            <table className={ADMIN_TABLE_CLASS}>
               <thead><tr><th>Roll No</th><th>Name</th><th>Branch</th><th>Sem</th><th>Sec</th><th>Present</th><th>Absent</th><th>%</th></tr></thead>
               <tbody>
                 {report.summary_rows.length ? report.summary_rows.map((row) => (

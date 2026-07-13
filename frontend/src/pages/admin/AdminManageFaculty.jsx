@@ -10,6 +10,8 @@ const ADMIN_FORM_LABEL_CLASS = "admin-form-label text-base font-medium text-zinc
 const ADMIN_FORM_INPUT_CLASS =
   "admin-form-input w-full min-h-11 rounded-lg border border-[#cbd5e1] bg-white p-[10px_12px] text-base text-[#1f2937] focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.12)] focus:outline-none dark:border-ui-border-dark dark:bg-[#0f172a] dark:text-ui-text-dark dark:placeholder:text-ui-text-muted-dark";
 const ACTION_BTN_BASE = "action-btn inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border bg-white text-base transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-ui-card-dark dark:border-ui-border-dark";
+const ADMIN_TABLE_CLASS =
+  "admin-table w-full border-separate [border-spacing:0_10px] bg-transparent [&_thead]:bg-transparent dark:[&_thead]:bg-slate-800 dark:[&_thead]:text-slate-300 [&_th]:p-[14px_16px] [&_th]:text-left [&_th]:text-[13px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.3px] [&_th]:text-slate-500 [&_th]:border-b-0 [&_tbody_tr]:transition-transform [&_tbody_tr]:duration-150 [&_tbody_tr:hover]:-translate-y-px [&_td]:border-y [&_td]:border-[#e2e8f0] [&_td]:bg-white [&_td]:p-[14px_16px] [&_td]:text-[14px] [&_td]:text-slate-700 dark:[&_td]:border-ui-border-dark dark:[&_td]:bg-transparent dark:[&_td]:text-ui-text-dark [&_tbody_tr_td:first-child]:rounded-l-[14px] [&_tbody_tr_td:first-child]:border-l [&_tbody_tr_td:last-child]:rounded-r-[14px] [&_tbody_tr_td:last-child]:border-r [&_tbody_tr:hover_td]:bg-[#f8fafc] dark:[&_tbody_tr:hover_td]:bg-slate-800/50";
 const ACTION_BTN_VIEW_CLASS = `${ACTION_BTN_BASE} view-btn border-purple-200 text-violet-600 hover:border-violet-300 hover:bg-violet-50`;
 const ACTION_BTN_CROWN_CLASS = `${ACTION_BTN_BASE} crown-btn border-violet-200 text-violet-900 hover:border-violet-300 hover:bg-violet-50`;
 const ACTION_BTN_KEY_CLASS = `${ACTION_BTN_BASE} key-btn border-amber-200 text-amber-600 hover:border-amber-300 hover:bg-amber-50`;
@@ -26,7 +28,7 @@ const PRIMARY_BTN_CLASS =
 function FacultyListSkeleton({ rows = 6 }) {
   return (
     <div className="table-wrap skeleton-table-wrap faculty-table-skeleton-shell w-full max-w-full min-w-0 overflow-auto">
-      <table className="admin-table faculty-table-skeleton-table" aria-hidden="true">
+      <table className={`${ADMIN_TABLE_CLASS} faculty-table-skeleton-table`} aria-hidden="true">
         <thead>
           <tr>
             <th>Name</th>
@@ -331,7 +333,7 @@ function AdminManageFaculty() {
         ) : (
           <>
             <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
-              <table className="admin-table">
+              <table className={ADMIN_TABLE_CLASS}>
                 <thead>
                   <tr>
                     <th>Name</th>

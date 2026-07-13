@@ -14,11 +14,13 @@ const PAGINATION_BTN_CLASS =
 const PRIMARY_BTN_CLASS =
   "primary-btn inline-flex cursor-pointer items-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] disabled:cursor-not-allowed disabled:opacity-70";
 const ADMIN_FORM_LABEL_CLASS = "admin-form-label text-base font-medium text-zinc-700 dark:text-ui-text-dark";
+const ADMIN_TABLE_CLASS =
+  "admin-table w-full border-separate [border-spacing:0_10px] bg-transparent [&_thead]:bg-transparent dark:[&_thead]:bg-slate-800 dark:[&_thead]:text-slate-300 [&_th]:p-[14px_16px] [&_th]:text-left [&_th]:text-[13px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.3px] [&_th]:text-slate-500 [&_th]:border-b-0 [&_tbody_tr]:transition-transform [&_tbody_tr]:duration-150 [&_tbody_tr:hover]:-translate-y-px [&_td]:border-y [&_td]:border-[#e2e8f0] [&_td]:bg-white [&_td]:p-[14px_16px] [&_td]:text-[14px] [&_td]:text-slate-700 dark:[&_td]:border-ui-border-dark dark:[&_td]:bg-transparent dark:[&_td]:text-ui-text-dark [&_tbody_tr_td:first-child]:rounded-l-[14px] [&_tbody_tr_td:first-child]:border-l [&_tbody_tr_td:last-child]:rounded-r-[14px] [&_tbody_tr_td:last-child]:border-r [&_tbody_tr:hover_td]:bg-[#f8fafc] dark:[&_tbody_tr:hover_td]:bg-slate-800/50";
 
 function FaceRegistrationsSkeleton({ rows = 7 }) {
   return (
     <div className="table-wrap skeleton-table-wrap faces-table-skeleton-shell w-full max-w-full min-w-0 overflow-auto rounded-[14px]">
-      <table className="admin-table faces-table-skeleton-table" aria-hidden="true">
+      <table className={`${ADMIN_TABLE_CLASS} faces-table-skeleton-table`} aria-hidden="true">
         <thead>
           <tr>
             <th>Roll Number</th>
@@ -480,7 +482,7 @@ function AdminManageFaces() {
         ) : (
           <>
             <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
-              <table className="admin-table">
+              <table className={ADMIN_TABLE_CLASS}>
                 <thead>
                   <tr>
                     <th>Roll Number</th>

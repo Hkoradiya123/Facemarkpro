@@ -5,6 +5,9 @@ import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
 import { PageShell, SectionCard, SkeletonBlock, StatGrid } from "../../components/Shared";
 
+const ADMIN_TABLE_CLASS =
+  "admin-table w-full border-separate [border-spacing:0_10px] bg-transparent [&_thead]:bg-transparent dark:[&_thead]:bg-slate-800 dark:[&_thead]:text-slate-300 [&_th]:p-[14px_16px] [&_th]:text-left [&_th]:text-[13px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.3px] [&_th]:text-slate-500 [&_th]:border-b-0 [&_tbody_tr]:transition-transform [&_tbody_tr]:duration-150 [&_tbody_tr:hover]:-translate-y-px [&_td]:border-y [&_td]:border-[#e2e8f0] [&_td]:bg-white [&_td]:p-[14px_16px] [&_td]:text-[14px] [&_td]:text-slate-700 dark:[&_td]:border-ui-border-dark dark:[&_td]:bg-transparent dark:[&_td]:text-ui-text-dark [&_tbody_tr_td:first-child]:rounded-l-[14px] [&_tbody_tr_td:first-child]:border-l [&_tbody_tr_td:last-child]:rounded-r-[14px] [&_tbody_tr_td:last-child]:border-r [&_tbody_tr:hover_td]:bg-[#f8fafc] dark:[&_tbody_tr:hover_td]:bg-slate-800/50";
+
 const TABS = [
   { id: "branches", label: "Branches", singular: "Branch" },
   { id: "classes", label: "Classes", singular: "Class" },
@@ -28,7 +31,7 @@ const EMPTY_FORMS = {
 function AcademicSetupSkeleton({ columns, rows = 6 }) {
   return (
     <div className="table-wrap skeleton-table-wrap setup-table-skeleton-shell w-full max-w-full min-w-0 overflow-auto">
-      <table className="admin-table setup-table-skeleton-table" aria-hidden="true">
+      <table className={`${ADMIN_TABLE_CLASS} setup-table-skeleton-table`} aria-hidden="true">
         <thead>
           <tr>
             {columns.map((column) => (
@@ -337,7 +340,7 @@ function AdminAcademicSetup() {
         {loading ? <AcademicSetupSkeleton rows={6} columns={renderColumns()} /> : error ? <p className="error-copy rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{error}</p> : (
           currentItems.length ? (
             <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
-              <table className="admin-table">
+              <table className={ADMIN_TABLE_CLASS}>
                 <thead><tr>{renderColumns().map((column) => <th key={column}>{column}</th>)}</tr></thead>
                 <tbody>{renderRows().map((row, rowIndex) => <tr key={`${activeTab}-${rowIndex}`}>{row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>)}</tr>)}</tbody>
               </table>
