@@ -5,9 +5,19 @@ import { apiUrl, useSessionProfile } from "../../utils/auth";
 import { adminNav } from "../../utils/constants";
 import { PageShell, SectionCard, SkeletonBlock } from "../../components/Shared";
 
+const MODAL_OVERLAY_CLASS = "admin-modal-overlay fixed inset-0 z-[1600] grid place-items-center bg-slate-900/45 p-5";
+const MODAL_HEADER_CLASS = "admin-modal-header flex items-center justify-between border-b border-slate-200 p-[14px_18px] dark:border-ui-border-dark";
+const MODAL_CLOSE_CLASS = "admin-modal-close h-8 w-8 cursor-pointer rounded-lg border border-slate-300 bg-white text-base text-slate-600 dark:border-ui-border-dark dark:bg-[#111827] dark:text-ui-text-dark";
+const MODAL_TITLE_CLASS = "m-0 text-[1.05rem] text-slate-800 dark:text-ui-text-dark";
+const PAGINATION_BTN_CLASS =
+  "pagination-btn rounded-md border border-ui-border bg-white px-4 py-2 font-medium text-slate-600 transition-[transform,background,border-color,color,box-shadow] duration-[160ms] hover:-translate-y-px hover:border-slate-300 hover:bg-slate-100 hover:text-slate-800 hover:shadow-[0_10px_18px_rgba(15,23,42,0.08)] disabled:cursor-not-allowed disabled:opacity-50 dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-dark";
+const PRIMARY_BTN_CLASS =
+  "primary-btn inline-flex cursor-pointer items-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] disabled:cursor-not-allowed disabled:opacity-70";
+const ADMIN_FORM_LABEL_CLASS = "admin-form-label text-base font-medium text-zinc-700 dark:text-ui-text-dark";
+
 function FaceRegistrationsSkeleton({ rows = 7 }) {
   return (
-    <div className="table-wrap skeleton-table-wrap faces-table-skeleton-shell">
+    <div className="table-wrap skeleton-table-wrap faces-table-skeleton-shell w-full max-w-full min-w-0 overflow-auto rounded-[14px]">
       <table className="admin-table faces-table-skeleton-table" aria-hidden="true">
         <thead>
           <tr>
@@ -22,21 +32,21 @@ function FaceRegistrationsSkeleton({ rows = 7 }) {
           {Array.from({ length: rows }, (_, rowIndex) => (
             <tr key={`face-skeleton-row-${rowIndex}`}>
               <td>
-                <SkeletonBlock className="skeleton-line faces-cell-roll" />
+                <SkeletonBlock className="skeleton-line faces-cell-roll h-3 w-[70%] rounded-full" />
               </td>
               <td>
-                <SkeletonBlock className="skeleton-line faces-cell-name" />
+                <SkeletonBlock className="skeleton-line faces-cell-name h-3 w-[85%] rounded-full" />
               </td>
               <td>
-                <SkeletonBlock className="skeleton-line faces-cell-class" />
+                <SkeletonBlock className="skeleton-line faces-cell-class h-3 w-[55%] rounded-full" />
               </td>
               <td>
-                <SkeletonBlock className="skeleton-line faces-cell-section" />
+                <SkeletonBlock className="skeleton-line faces-cell-section h-3 w-[40%] rounded-full" />
               </td>
               <td>
-                <div className="faces-cell-actions">
-                  <SkeletonBlock className="skeleton-block faces-action-dot" />
-                  <SkeletonBlock className="skeleton-block faces-action-dot" />
+                <div className="faces-cell-actions flex items-center gap-2">
+                  <SkeletonBlock className="skeleton-block faces-action-dot h-9 w-9 rounded-lg" />
+                  <SkeletonBlock className="skeleton-block faces-action-dot h-9 w-9 rounded-lg" />
                 </div>
               </td>
             </tr>
@@ -438,10 +448,10 @@ function AdminManageFaces() {
       profile={profile}
     >
       <SectionCard title="Registered Faces">
-        <div className="admin-table-toolbar">
+        <div className="admin-table-toolbar mb-5 flex items-center gap-3">
           <input
             type="text"
-            className="search-input"
+            className="search-input flex-1 rounded-lg border border-slate-200 bg-white p-[10px_14px] text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.1)] focus:outline-none dark:border-ui-border-dark dark:bg-[#0f172a] dark:text-ui-text-dark dark:placeholder:text-ui-text-muted-dark"
             placeholder="Search by student, roll no, branch, or class..."
             value={searchQuery}
             onChange={(e) => {
@@ -449,27 +459,27 @@ function AdminManageFaces() {
               setCurrentPage(1);
             }}
           />
-          <button className="pagination-btn" type="button" onClick={() => openRegisterModal("", "create")}>
+          <button className={PAGINATION_BTN_CLASS} type="button" onClick={() => openRegisterModal("", "create")}>
             <FaCamera /> Open Register Face
           </button>
         </div>
 
-        {actionMessage ? <p className="success-copy">{actionMessage}</p> : null}
+        {actionMessage ? <p className="success-copy mb-3 rounded-md border-l-[3px] border-l-emerald-500 bg-emerald-500/[0.08] p-3 text-sm text-emerald-700">{actionMessage}</p> : null}
 
         {loading ? (
           <FaceRegistrationsSkeleton rows={7} />
         ) : error ? (
-          <p className="error-copy">{error}</p>
+          <p className="error-copy rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{error}</p>
         ) : paginatedFaces.length === 0 ? (
-          <div className="empty-state-actions">
-            <p className="muted-copy">No registered faces found.</p>
-            <button className="primary-btn" type="button" onClick={() => openRegisterModal("", "create")}>
+          <div className="empty-state-actions grid justify-items-start gap-3">
+            <p className="muted-copy m-0 text-ui-text-muted dark:text-ui-text-muted-dark">No registered faces found.</p>
+            <button className={PRIMARY_BTN_CLASS} type="button" onClick={() => openRegisterModal("", "create")}>
               <FaCamera /> Register First Face
             </button>
           </div>
         ) : (
           <>
-            <div className="table-wrap">
+            <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
               <table className="admin-table">
                 <thead>
                   <tr>
@@ -483,20 +493,20 @@ function AdminManageFaces() {
                 <tbody>
                   {paginatedFaces.map((f, idx) => (
                     <tr key={`${f.student_roll}-${f.class_file}-${idx}`}>
-                      <td className="student-roll"><strong>{f.student_roll || "-"}</strong></td>
-                      <td className="student-name">{f.student_name || "-"}</td>
+                      <td className="student-roll font-semibold text-slate-800"><strong>{f.student_roll || "-"}</strong></td>
+                      <td className="student-name font-semibold text-slate-800">{f.student_name || "-"}</td>
                       <td>
-                        <span className="semester-badge">
+                        <span className="semester-badge inline-block rounded-md bg-indigo-100 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.3px] text-indigo-700">
                           {f.branch || "-"}-{f.semester || "-"}
                         </span>
                       </td>
                       <td>
-                        <span className="dept-badge">{f.section || "A"}</span>
+                        <span className="dept-badge inline-block rounded-md bg-slate-300 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.3px] text-slate-700">{f.section || "A"}</span>
                       </td>
                       <td>
-                        <div className="admin-inline-actions">
+                        <div className="admin-inline-actions inline-flex flex-wrap items-center gap-2">
                           <button
-                            className="face-action-btn reregister"
+                            className="face-action-btn reregister inline-flex h-9 w-9 items-center justify-center rounded-lg border border-violet-200 bg-violet-50 text-[13px] text-violet-700 transition-all duration-200 hover:border-violet-300 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-55"
                             onClick={() => openRegisterModal(f.student_roll, "replace")}
                             title="Re-register Face"
                             aria-label="Re-register Face"
@@ -505,7 +515,7 @@ function AdminManageFaces() {
                             <FaArrowsRotate />
                           </button>
                           <button
-                            className="face-action-btn delete"
+                            className="face-action-btn delete inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-[13px] text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-55"
                             onClick={() => deleteFaceRegistration(f)}
                             title={deletingRoll === String(f.student_roll || "").trim() ? "Deleting face data" : "Delete Face"}
                             aria-label={deletingRoll === String(f.student_roll || "").trim() ? "Deleting face data" : "Delete Face"}
@@ -522,17 +532,17 @@ function AdminManageFaces() {
             </div>
 
             {totalPages > 1 ? (
-              <div className="pagination">
+              <div className="pagination mt-6 flex items-center justify-center gap-4 pt-5">
                 <button
-                  className="pagination-btn"
+                  className={PAGINATION_BTN_CLASS}
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => p - 1)}
                 >
                   Previous
                 </button>
-                <span className="pagination-info">Page {currentPage} of {totalPages}</span>
+                <span className="pagination-info min-w-[140px] text-center text-sm font-medium text-slate-500">Page {currentPage} of {totalPages}</span>
                 <button
-                  className="pagination-btn"
+                  className={PAGINATION_BTN_CLASS}
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((p) => p + 1)}
                 >
@@ -545,28 +555,31 @@ function AdminManageFaces() {
       </SectionCard>
 
       {registerModalOpen ? (
-        <div className="admin-modal-overlay" onClick={closeRegisterModal}>
-          <div className="admin-modal admin-face-register-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h3>{registerMode === "replace" ? "Re-register Face" : "Add New Face"}</h3>
-              <button className="admin-modal-close" onClick={closeRegisterModal}>
+        <div className={MODAL_OVERLAY_CLASS} onClick={closeRegisterModal}>
+          <div
+            className="admin-modal admin-face-register-modal flex max-h-[calc(100dvh-24px)] w-[min(1040px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.24)] dark:bg-ui-card-dark"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={MODAL_HEADER_CLASS}>
+              <h3 className={MODAL_TITLE_CLASS}>{registerMode === "replace" ? "Re-register Face" : "Add New Face"}</h3>
+              <button className={MODAL_CLOSE_CLASS} onClick={closeRegisterModal}>
                 <FaXmark />
               </button>
             </div>
-            <div className="admin-modal-body admin-face-register-body">
-              <div className="admin-student-picker">
-                <label className="admin-form-label" htmlFor="face-student-search">
+            <div className="admin-modal-body admin-face-register-body grid gap-4 overflow-y-auto p-[16px_18px]">
+              <div className="admin-student-picker grid gap-2.5">
+                <label className={ADMIN_FORM_LABEL_CLASS} htmlFor="face-student-search">
                   <span>Select Student</span>
                 </label>
                 <input
                   id="face-student-search"
                   type="text"
-                  className="admin-form-input admin-student-search"
+                  className="admin-form-input admin-student-search w-full min-h-11 rounded-lg border border-[#cbd5e1] bg-white p-[10px_12px] text-base text-[#1f2937] focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.12)] focus:outline-none dark:border-ui-border-dark dark:bg-[#0f172a] dark:text-ui-text-dark"
                   placeholder="Type name, roll number, branch, semester, or section"
                   value={registerStudentSearch}
                   onChange={(e) => setRegisterStudentSearch(e.target.value)}
                 />
-                <div className="admin-student-results" role="listbox" aria-label="Student search results">
+                <div className="admin-student-results grid max-h-[220px] gap-2 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-1.5 dark:border-ui-border-dark dark:bg-ui-card-muted-dark" role="listbox" aria-label="Student search results">
                   {filteredRegisterStudents.length ? (
                     filteredRegisterStudents.map((student) => {
                       const isActive = String(student.roll_no || "") === String(registerStudentRoll || "");
@@ -574,7 +587,9 @@ function AdminManageFaces() {
                         <button
                           key={student._id || student.roll_no}
                           type="button"
-                          className={`admin-student-result${isActive ? " active" : ""}`}
+                          className={`admin-student-result${isActive ? " active" : ""} grid w-full cursor-pointer gap-1 rounded-xl border p-[12px_14px] text-left transition-[transform,border-color,background,box-shadow] duration-200 hover:-translate-y-px hover:border-blue-200 hover:shadow-[0_10px_18px_rgba(37,99,235,0.08)] ${
+                            isActive ? "border-blue-400 bg-blue-50 dark:border-sky-300/72 dark:bg-slate-800/96" : "border-transparent bg-white text-slate-800 dark:bg-slate-900/96 dark:text-ui-text-dark"
+                          }`}
                           onClick={() => {
                             setRegisterStudentRoll(String(student.roll_no || ""));
                             setRegisterStudentSearch(
@@ -582,34 +597,36 @@ function AdminManageFaces() {
                             );
                           }}
                         >
-                          <strong>{student.name} <span>({student.roll_no})</span></strong>
-                          <small>{student.branch}-{student.semester}{student.section}</small>
+                          <strong className="text-[0.95rem] leading-[1.3]">{student.name} <span className="text-blue-600 dark:text-sky-300">({student.roll_no})</span></strong>
+                          <small className="text-[0.84rem] text-slate-500 dark:text-ui-text-muted-dark">{student.branch}-{student.semester}{student.section}</small>
                         </button>
                       );
                     })
                   ) : (
-                    <div className="admin-student-results-empty">No matching students found.</div>
+                    <div className="admin-student-results-empty p-3.5 text-center text-sm text-slate-500 dark:text-ui-text-muted-dark">No matching students found.</div>
                   )}
                 </div>
               </div>
 
               {selectedStudent ? (
-                <div className="admin-info-row">
-                  <strong>Selected:</strong> {selectedStudent.name} ({selectedStudent.roll_no}) / {selectedStudent.branch}-{selectedStudent.semester}{selectedStudent.section}
+                <div className="admin-info-row text-[0.96rem] text-slate-700 dark:text-ui-text-muted-dark">
+                  <strong className="text-slate-900 dark:text-ui-text-dark">Selected:</strong> {selectedStudent.name} ({selectedStudent.roll_no}) / {selectedStudent.branch}-{selectedStudent.semester}{selectedStudent.section}
                 </div>
               ) : null}
 
               {registerMode === "replace" ? (
-                <p className="admin-confirm-message">
+                <p className="admin-confirm-message m-0 text-[0.96rem] text-slate-700 dark:text-ui-text-muted-dark">
                   Old face embeddings will only be removed after the new 3 photos are processed successfully.
                 </p>
               ) : null}
 
-              <div className="admin-face-slot-grid">
+              <div className="admin-face-slot-grid grid grid-cols-3 gap-3.5 max-[992px]:grid-cols-1">
                 {registerPhotos.map((photo, index) => (
                   <div
                     key={`face-slot-${index}`}
-                    className={`admin-face-slot${photo ? " filled" : ""}`}
+                    className={`admin-face-slot${photo ? " filled" : ""} relative grid min-h-[260px] content-between gap-3 overflow-hidden rounded-[20px] border-2 border-dashed border-slate-400/45 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.12),transparent_28%),linear-gradient(165deg,#ffffff_0%,#f8fafc_100%)] p-3.5 dark:bg-ui-card-dark ${
+                      photo ? "border-solid border-blue-500/28" : ""
+                    }`}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => onDropFile(index, e)}
                   >
@@ -619,32 +636,32 @@ function AdminManageFaces() {
                       }}
                       type="file"
                       accept="image/*"
-                      className="admin-face-slot-input"
+                      className="admin-face-slot-input hidden"
                       onChange={(e) => onChooseFile(index, e)}
                     />
                     {photo ? (
                       <>
-                        <img src={photo.previewUrl} alt={`Face slot ${index + 1}`} className="admin-face-slot-preview" />
-                        <div className="admin-face-slot-overlay">
-                          <strong>Photo {index + 1}</strong>
-                          <span>{photo.source}</span>
+                        <img src={photo.previewUrl} alt={`Face slot ${index + 1}`} className="admin-face-slot-preview absolute inset-0 h-full w-full object-cover" />
+                        <div className="admin-face-slot-overlay relative z-[1] grid w-fit gap-1 self-start rounded-2xl bg-slate-900/68 p-[10px_12px] text-white backdrop-blur-[8px]">
+                          <strong className="text-[0.95rem]">Photo {index + 1}</strong>
+                          <span className="text-[0.8rem] leading-[1.45]">{photo.source}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="admin-face-slot-empty">
-                        <strong>Photo {index + 1}</strong>
-                        <span>Upload, drag and drop, or use camera</span>
+                      <div className="admin-face-slot-empty relative z-[1] grid min-h-[150px] place-items-center gap-2 text-center text-slate-600">
+                        <strong className="text-[0.95rem]">Photo {index + 1}</strong>
+                        <span className="text-[0.8rem] leading-[1.45]">Upload, drag and drop, or use camera</span>
                       </div>
                     )}
-                    <div className="admin-face-slot-actions">
-                      <button type="button" className="pagination-btn" onClick={() => fileInputRefs.current[index]?.click()}>
+                    <div className="admin-face-slot-actions relative z-[1] flex flex-wrap items-end gap-2 self-end">
+                      <button type="button" className={`${PAGINATION_BTN_CLASS} inline-flex items-center gap-1.5`} onClick={() => fileInputRefs.current[index]?.click()}>
                         <FaCloudArrowUp /> Upload
                       </button>
-                      <button type="button" className="pagination-btn" onClick={() => openCameraForSlot(index)}>
+                      <button type="button" className={`${PAGINATION_BTN_CLASS} inline-flex items-center gap-1.5`} onClick={() => openCameraForSlot(index)}>
                         <FaCamera /> Camera
                       </button>
                       {photo ? (
-                        <button type="button" className="pagination-btn" onClick={() => removePhotoForSlot(index)}>
+                        <button type="button" className={`${PAGINATION_BTN_CLASS} inline-flex items-center gap-1.5`} onClick={() => removePhotoForSlot(index)}>
                           <FaXmark /> Remove
                         </button>
                       ) : null}
@@ -653,11 +670,11 @@ function AdminManageFaces() {
                 ))}
               </div>
 
-              <div className="admin-confirm-actions">
-                <button className="pagination-btn" onClick={closeRegisterModal}>
+              <div className="admin-confirm-actions mt-3.5 flex justify-end gap-2.5">
+                <button className={PAGINATION_BTN_CLASS} onClick={closeRegisterModal}>
                   Cancel
                 </button>
-                <button className="primary-btn" onClick={registerFace} disabled={registerLoading}>
+                <button className={PRIMARY_BTN_CLASS} onClick={registerFace} disabled={registerLoading}>
                   <FaPlus /> {registerLoading ? (registerMode === "replace" ? "Re-registering..." : "Registering...") : (registerMode === "replace" ? "Re-register Face" : "Register Face")}
                 </button>
               </div>
@@ -668,17 +685,20 @@ function AdminManageFaces() {
 
       {cameraState.open ? (
         <div
-          className="admin-modal-overlay"
+          className={MODAL_OVERLAY_CLASS}
           onClick={() => {
             stopCameraStream();
             setCameraState({ open: false, slotIndex: null, error: "", starting: false });
           }}
         >
-          <div className="admin-modal admin-face-camera-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h3>Capture Face Photo</h3>
+          <div
+            className="admin-modal admin-face-camera-modal w-[min(620px,calc(100vw-24px))] overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.24)] dark:bg-ui-card-dark"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={MODAL_HEADER_CLASS}>
+              <h3 className={MODAL_TITLE_CLASS}>Capture Face Photo</h3>
               <button
-                className="admin-modal-close"
+                className={MODAL_CLOSE_CLASS}
                 onClick={() => {
                   stopCameraStream();
                   setCameraState({ open: false, slotIndex: null, error: "", starting: false });
@@ -687,15 +707,15 @@ function AdminManageFaces() {
                 <FaXmark />
               </button>
             </div>
-            <div className="admin-modal-body admin-face-camera-body">
-              <div className="admin-face-camera-frame">
+            <div className="admin-modal-body admin-face-camera-body grid gap-4 p-[16px_18px]">
+              <div className="admin-face-camera-frame relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-[#0f172a] [&>video]:h-full [&>video]:w-full [&>video]:object-cover">
                 <video ref={cameraVideoRef} autoPlay playsInline muted />
-                {cameraState.starting ? <span className="admin-face-camera-status">Starting camera...</span> : null}
+                {cameraState.starting ? <span className="admin-face-camera-status absolute inset-[auto_14px_14px_14px] rounded-2xl bg-slate-900/72 px-3 py-2.5 text-center font-semibold text-white">Starting camera...</span> : null}
               </div>
-              {cameraState.error ? <p className="error-copy">{cameraState.error}</p> : null}
-              <div className="admin-confirm-actions">
+              {cameraState.error ? <p className="error-copy rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{cameraState.error}</p> : null}
+              <div className="admin-confirm-actions mt-3.5 flex justify-end gap-2.5">
                 <button
-                  className="pagination-btn"
+                  className={PAGINATION_BTN_CLASS}
                   onClick={() => {
                     stopCameraStream();
                     setCameraState({ open: false, slotIndex: null, error: "", starting: false });
@@ -703,7 +723,7 @@ function AdminManageFaces() {
                 >
                   Cancel
                 </button>
-                <button className="primary-btn" onClick={captureCameraPhoto} disabled={cameraState.starting || Boolean(cameraState.error)}>
+                <button className={PRIMARY_BTN_CLASS} onClick={captureCameraPhoto} disabled={cameraState.starting || Boolean(cameraState.error)}>
                   <FaCamera /> Capture
                 </button>
               </div>
