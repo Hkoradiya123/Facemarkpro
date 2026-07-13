@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaArrowRightFromBracket, FaBars, FaHouse } from "react-icons/fa6";
+import { FaAnglesLeft, FaAnglesRight, FaArrowRightFromBracket, FaBars, FaHouse } from "react-icons/fa6";
 import { getStoredAuthUser, getStoredAuthRole, clearAuth, buildProfileFromUser } from "../../utils/auth";
-import { SIDEBAR_LOGO_URL, iconMap, THEME_KEY } from "../../utils/constants";
+import { SIDEBAR_LOGO_URL, iconMap, THEME_KEY, SIDEBAR_COLLAPSED_KEY } from "../../utils/constants";
 
 function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAction, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [theme, setTheme] = useState(() => {
     if (typeof document !== "undefined") {
       if (document.body.classList.contains("dark")) return "dark";
@@ -65,6 +66,14 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((prev) => !prev);
+  };
+
   const isNavItemActive = (targetPath) => {
     if (!targetPath) return false;
     if (location.pathname === targetPath) return true;
@@ -81,17 +90,17 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
         aria-hidden="true"
       />
       <aside
-        className={`portal-sidebar ${sidebarOpen ? "open" : ""} fixed inset-y-0 left-0 z-[1200] flex w-[306px] flex-col gap-[18px] overflow-hidden bg-[linear-gradient(145deg,#fff_0%,#f8fafc_100%)] p-[22px_18px_26px] shadow-[2px_0_20px_rgba(0,0,0,0.06)] dark:bg-[linear-gradient(160deg,#111827_0%,#1f2937_100%)] dark:shadow-[2px_0_20px_rgba(0,0,0,0.35)] max-[992px]:w-[min(86vw,320px)] max-[992px]:rounded-tr-[20px] max-[992px]:rounded-br-[20px] max-[992px]:transition-[transform,opacity,visibility] max-[992px]:duration-[420ms] max-[992px]:ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`portal-sidebar ${sidebarOpen ? "open" : ""} ${sidebarCollapsed ? "collapsed w-[72px]" : "w-[306px]"} fixed inset-y-0 left-0 z-[1200] flex flex-col gap-[18px] overflow-hidden bg-[linear-gradient(145deg,#fff_0%,#f8fafc_100%)] p-[22px_18px_26px] shadow-[2px_0_20px_rgba(0,0,0,0.06)] transition-[width] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] dark:bg-[linear-gradient(160deg,#111827_0%,#1f2937_100%)] dark:shadow-[2px_0_20px_rgba(0,0,0,0.35)] max-[992px]:w-[min(86vw,320px)] max-[992px]:rounded-tr-[20px] max-[992px]:rounded-br-[20px] max-[992px]:transition-[transform,opacity,visibility] max-[992px]:duration-[420ms] max-[992px]:ease-[cubic-bezier(0.22,1,0.36,1)] ${
           sidebarOpen
             ? "max-[992px]:translate-x-0 max-[992px]:opacity-100 max-[992px]:visible"
             : "max-[992px]:-translate-x-full max-[992px]:opacity-0 max-[992px]:invisible"
         }`}
       >
-        <div className="sidebar-brand mb-0.5 flex items-center gap-2.5 border-b border-slate-400/20 px-2.5 pb-4 pt-3.5">
-          <div className="brand-mark grid h-[52px] w-[52px] place-items-center rounded-2xl border border-blue-500/[0.18] bg-[linear-gradient(135deg,#f8fbff,#e6f0ff)] font-bold text-[#1976d2] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-blue-400/25 dark:bg-[linear-gradient(135deg,#151c2b,#273451)] dark:text-blue-400 dark:shadow-[inset_0_1px_0_rgba(96,165,250,0.1)]">
+        <div className={`sidebar-brand mb-0.5 flex items-center gap-2.5 border-b border-slate-400/20 px-2.5 pb-4 pt-3.5 ${sidebarCollapsed ? "justify-center max-[992px]:justify-start" : ""}`}>
+          <div className="brand-mark grid h-[52px] w-[52px] flex-shrink-0 place-items-center rounded-2xl border border-blue-500/[0.18] bg-[linear-gradient(135deg,#f8fbff,#e6f0ff)] font-bold text-[#1976d2] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] dark:border-blue-400/25 dark:bg-[linear-gradient(135deg,#151c2b,#273451)] dark:text-blue-400 dark:shadow-[inset_0_1px_0_rgba(96,165,250,0.1)]">
              <img src={SIDEBAR_LOGO_URL} alt="FaceMarkPro" />
           </div>
-          <div className="brand-copy flex min-w-0 flex-col gap-0.5">
+          <div className={`brand-copy min-w-0 flex-col gap-0.5 ${sidebarCollapsed ? "hidden max-[992px]:flex" : "flex"}`}>
             <div className="brand-title flex gap-0.5 text-lg font-black text-ui-text dark:text-ui-text-dark">
               <span>FaceMark</span>
               <span className="accent text-[#4facfe] dark:text-blue-400">Pro</span>
@@ -103,7 +112,7 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
         <div
           className={`profile-section ${profileMenuItems.length ? "profile-trigger" : ""} mx-0.5 mb-3 flex items-center gap-3 border-b border-slate-400/[0.24] px-3 pb-[18px] pt-4 ${
             profileMenuItems.length ? "cursor-pointer rounded-2xl transition-colors duration-200 ease-in-out hover:bg-[#4facfe]/[0.08]" : ""
-          }`}
+          } ${sidebarCollapsed ? "justify-center max-[992px]:justify-start" : ""}`}
           onClick={() => {
             if (profileMenuItems.length) setProfileMenuOpen((open) => !open);
           }}
@@ -124,7 +133,7 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
               effectiveProfile.avatar
             )}
           </div>
-          <div className="profile-copy">
+          <div className={`profile-copy ${sidebarCollapsed ? "hidden max-[992px]:block" : "block"}`}>
             <h5 className="m-0 text-base font-bold text-ui-text dark:text-ui-text-dark">{effectiveProfile.name}</h5>
             {effectiveProfile.meta ? <p className="mt-1 text-xs font-medium text-ui-text-muted dark:text-ui-text-muted-dark">{effectiveProfile.meta}</p> : null}
           </div>
@@ -156,17 +165,18 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
               <Link
                 key={item.to}
                 to={item.to}
+                title={sidebarCollapsed ? item.label : undefined}
                 className={`nav-link${active ? " active" : ""} flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5 text-[15px] font-medium text-ui-text transition-all duration-[250ms] ease-in-out dark:text-ui-text-dark ${
                   active
                     ? "bg-[linear-gradient(135deg,#4d98db_0%,#2d7ed2_100%)] text-[#374151] shadow-[0_8px_20px_rgba(59,130,246,0.24)]"
                     : "hover:translate-x-1 hover:bg-[#4facfe]/[0.12]"
-                }`}
+                } ${sidebarCollapsed ? "justify-center max-[992px]:justify-start" : ""}`}
                 onClick={() => setSidebarOpen(false)}
               >
                 <span className={`nav-icon inline-grid h-[22px] w-[22px] flex-shrink-0 place-items-center rounded-lg text-center text-[15px] font-bold opacity-90 ${active ? "text-white" : "text-slate-500"}`}>
                   {Icon ? <Icon /> : "*"}
                 </span>
-                <span>{item.label}</span>
+                <span className={sidebarCollapsed ? "hidden max-[992px]:inline" : ""}>{item.label}</span>
               </Link>
             );
 
@@ -187,19 +197,33 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
           {variant === "faculty" ? (
             <Link
               to="/admin/dashboard"
-              className={`nav-link nav-link-dashboard flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5 text-[15px] font-medium text-ui-text opacity-[0.82] hover:opacity-100 dark:text-ui-text-dark ${isNavItemActive("/admin/dashboard") ? "opacity-100" : ""}`}
+              title={sidebarCollapsed ? "Admin Dashboard" : undefined}
+              className={`nav-link nav-link-dashboard flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5 text-[15px] font-medium text-ui-text opacity-[0.82] hover:opacity-100 dark:text-ui-text-dark ${isNavItemActive("/admin/dashboard") ? "opacity-100" : ""} ${sidebarCollapsed ? "justify-center max-[992px]:justify-start" : ""}`}
               onClick={() => setSidebarOpen(false)}
             >
               <span className="nav-icon inline-grid h-[22px] w-[22px] flex-shrink-0 place-items-center rounded-lg text-slate-500">
                 <FaHouse />
               </span>
-              <span>Admin Dashboard</span>
+              <span className={sidebarCollapsed ? "hidden max-[992px]:inline" : ""}>Admin Dashboard</span>
             </Link>
           ) : null}
-          <div className="sidebar-footer-row flex items-center justify-between gap-3 border-t border-slate-400/[0.24] px-1 pb-0.5 pt-4">
+          <div className={`sidebar-footer-row flex items-center gap-3 border-t border-slate-400/[0.24] px-1 pb-0.5 pt-4 ${sidebarCollapsed ? "flex-col max-[992px]:flex-row max-[992px]:justify-between" : "justify-between"}`}>
+              <button
+                type="button"
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="sidebar-collapse-toggle inline-flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border border-ui-border bg-ui-card text-ui-text-muted transition-colors duration-200 hover:bg-ui-card-muted dark:border-ui-border-dark dark:bg-ui-card-dark dark:text-ui-text-muted-dark max-[992px]:hidden"
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-pressed={sidebarCollapsed}
+                onClick={toggleSidebarCollapsed}
+              >
+                {sidebarCollapsed ? <FaAnglesRight /> : <FaAnglesLeft />}
+              </button>
               <Link
                 to="/login"
-                className="logout-link nav-link flex min-w-[130px] items-center justify-center gap-3.5 rounded-2xl bg-[linear-gradient(135deg,#ff4b4b,#df2d2d)] px-[18px] py-3.5 text-[15px] font-medium text-white shadow-[0_8px_20px_rgba(220,38,38,0.22)]"
+                title={sidebarCollapsed ? "Logout" : undefined}
+                className={`logout-link nav-link flex items-center justify-center gap-3.5 rounded-2xl bg-[linear-gradient(135deg,#ff4b4b,#df2d2d)] px-[18px] py-3.5 text-[15px] font-medium text-white shadow-[0_8px_20px_rgba(220,38,38,0.22)] ${
+                  sidebarCollapsed ? "min-w-0 max-[992px]:min-w-[130px]" : "min-w-[130px]"
+                }`}
                 onClick={() => {
                   clearAuth();
                   setSidebarOpen(false);
@@ -208,11 +232,11 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
               <span className="nav-icon inline-grid h-[22px] w-[22px] flex-shrink-0 place-items-center rounded-lg text-white">
                 <FaArrowRightFromBracket />
               </span>
-              <span>Logout</span>
+              <span className={sidebarCollapsed ? "hidden max-[992px]:inline" : ""}>Logout</span>
             </Link>
             <button
               type="button"
-              className={`sidebar-mini-switch relative h-9 w-[66px] flex-shrink-0 cursor-pointer rounded-full border-0 ${theme === "dark" ? "is-dark bg-slate-600" : "bg-gray-300"}`}
+              className={`sidebar-mini-switch relative h-9 w-[66px] flex-shrink-0 cursor-pointer rounded-full border-0 ${theme === "dark" ? "is-dark bg-slate-600" : "bg-gray-300"} ${sidebarCollapsed ? "hidden max-[992px]:block" : "block"}`}
               aria-label="Toggle day and night mode"
               aria-pressed={theme === "dark"}
               onClick={toggleTheme}
@@ -227,7 +251,11 @@ function PageShell({ variant, nav, title, subtitle, profile, actions, sidebarAct
         </div>
       </aside>
 
-      <main className="portal-main ml-[306px] w-[calc(100%-306px)] flex-1 p-[14px_18px_24px] text-ui-text dark:text-ui-text-dark max-[992px]:ml-0 max-[992px]:w-full max-[992px]:p-[18px]">
+      <main
+        className={`portal-main flex-1 p-[14px_18px_24px] text-ui-text transition-[margin-left,width] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] dark:text-ui-text-dark max-[992px]:ml-0 max-[992px]:w-full max-[992px]:p-[18px] ${
+          sidebarCollapsed ? "ml-[72px] w-[calc(100%-72px)]" : "ml-[306px] w-[calc(100%-306px)]"
+        }`}
+      >
         <header className="page-header mb-6 flex items-start justify-between gap-4 max-[992px]:flex-col max-[992px]:items-stretch max-[992px]:gap-3.5">
           <div className="page-heading flex items-start gap-3.5 max-[992px]:w-full max-[992px]:justify-start">
             <button

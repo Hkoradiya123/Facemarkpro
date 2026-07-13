@@ -2,6 +2,7 @@ import { FaArrowRightFromBracket, FaBars, FaCalendarDays, FaCamera, FaChartLine,
 import { Responsive, WidthProvider } from "react-grid-layout";
 
 export const THEME_KEY = "theme";
+export const SIDEBAR_COLLAPSED_KEY = "sidebar_collapsed";
 export const FACULTY_KEY = "rememberedEmail";
 export const STUDENT_KEY = "rememberedRollNo";
 export const AUTH_TOKEN_KEY = "authToken";
