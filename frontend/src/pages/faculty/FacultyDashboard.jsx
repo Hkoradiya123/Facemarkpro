@@ -485,7 +485,8 @@ function FacultyDashboard() {
   }, [orderedMobileWidgetIds]);
 
   const gridClassName =
-    "faculty-widget-grid" + (isMobileBreakpoint && !isMobileLayoutLocked ? " mobile-unlocked" : " mobile-locked");
+    "faculty-widget-grid min-h-[70vh] w-full max-w-none touch-pan-y" +
+    (isMobileBreakpoint && !isMobileLayoutLocked ? " mobile-unlocked touch-none" : " mobile-locked");
 
   const renderedWidgets = useMemo(() => {
     if (!isMobileBreakpoint) return widgets;

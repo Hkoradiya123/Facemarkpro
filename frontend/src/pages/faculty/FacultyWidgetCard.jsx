@@ -34,22 +34,22 @@ function FacultyWidgetCard({
 
   return (
     <div
-      className={`faculty-widget-card widget-${widgetId} size-${sizeClass}${isGraphWidget ? " graph-widget" : ""}`}
+      className={`faculty-widget-card widget-${widgetId} size-${sizeClass}${isGraphWidget ? " graph-widget" : ""} flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-[18px] border border-slate-400/[0.18] bg-white shadow-[0_6px_20px_rgba(15,23,42,0.08)] transition-[transform,box-shadow,border-color,background] duration-[240ms] dark:border-ui-border-dark dark:bg-ui-card-dark`}
       data-grid-w={widget.w}
       data-grid-h={widget.h}
     >
-      <div className="faculty-widget-header">
-        <div className="widget-drag-handle">
-          <span className="widget-dot" />
+      <div className="faculty-widget-header flex items-center justify-between gap-3 border-b border-[#eef2f7] p-[10px_12px_8px] text-slate-700 dark:border-ui-border-dark dark:text-ui-text-dark">
+        <div className="widget-drag-handle flex cursor-move items-center gap-2.5 text-slate-700 dark:text-ui-text-dark">
+          <span className="widget-dot inline-block h-2.5 w-2.5 rounded-full bg-blue-400" />
           <strong>{catalogItem?.title || widgetId}</strong>
         </div>
-        <div className="widget-header-actions">
+        <div className="widget-header-actions inline-flex items-center gap-2">
           {showMoveControls ? (
-            <div className="widget-mobile-move-controls">
+            <div className="widget-mobile-move-controls inline-flex items-center gap-1.5">
               {canMoveUp ? (
                 <button
                   type="button"
-                  className="widget-move-btn"
+                  className="widget-move-btn inline-grid h-[26px] w-[26px] cursor-pointer place-items-center rounded-full border border-blue-600/25 bg-blue-600/10 text-blue-700 transition-[transform,background,border-color] duration-[160ms] hover:-translate-y-px hover:border-blue-600/40 hover:bg-blue-600/[0.16] active:translate-y-0"
                   onClick={onMoveUp}
                   aria-label="Move widget up"
                 >
@@ -59,7 +59,7 @@ function FacultyWidgetCard({
               {canMoveDown ? (
                 <button
                   type="button"
-                  className="widget-move-btn"
+                  className="widget-move-btn inline-grid h-[26px] w-[26px] cursor-pointer place-items-center rounded-full border border-blue-600/25 bg-blue-600/10 text-blue-700 transition-[transform,background,border-color] duration-[160ms] hover:-translate-y-px hover:border-blue-600/40 hover:bg-blue-600/[0.16] active:translate-y-0"
                   onClick={onMoveDown}
                   aria-label="Move widget down"
                 >
@@ -68,13 +68,21 @@ function FacultyWidgetCard({
               ) : null}
             </div>
           ) : null}
-          {isGraphWidget ? <span className="widget-hover-hint">Hover for insights</span> : null}
-          <button type="button" className="widget-remove-btn" onClick={() => onRemove(widgetId)}>
+          {isGraphWidget ? (
+            <span className="widget-hover-hint whitespace-nowrap rounded-full border border-sky-500/24 bg-sky-500/[0.14] px-2 py-1 text-[11px] font-semibold text-sky-700 opacity-0 transition-[opacity,transform] duration-200 dark:border-sky-400/35 dark:bg-sky-400/[0.15] dark:text-sky-300">
+              Hover for insights
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="widget-remove-btn h-7 w-7 cursor-pointer rounded-full border-0 bg-red-500/[0.12] text-red-600 transition-[transform,background,color,box-shadow] duration-[160ms] hover:scale-[1.08] hover:bg-red-500/20 hover:shadow-[0_8px_18px_rgba(220,38,38,0.18)] active:scale-[0.94]"
+            onClick={() => onRemove(widgetId)}
+          >
             x
           </button>
         </div>
       </div>
-      <div className="faculty-widget-body">{renderFacultyWidget(widgetId, sizeClass, data, widget)}</div>
+      <div className="faculty-widget-body flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-[8px_10px_10px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:min-w-0 [&>*]:max-w-full">{renderFacultyWidget(widgetId, sizeClass, data, widget)}</div>
     </div>
   );
 }
