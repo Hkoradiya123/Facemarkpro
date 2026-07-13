@@ -13,6 +13,10 @@ const TABS = [
   { id: "assignments", label: "Assignments", singular: "Assignment" },
 ];
 
+const ADMIN_FORM_LABEL_CLASS = "admin-form-label text-base font-medium text-zinc-700 dark:text-ui-text-dark";
+const ADMIN_FORM_INPUT_CLASS =
+  "admin-form-input w-full min-h-11 rounded-lg border border-[#cbd5e1] bg-white p-[10px_12px] text-base text-[#1f2937] focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.12)] focus:outline-none dark:border-ui-border-dark dark:bg-[#0f172a] dark:text-ui-text-dark dark:placeholder:text-ui-text-muted-dark";
+
 const EMPTY_FORMS = {
   branches: { id: "", code: "", name: "", active: true },
   classes: { id: "", branch: "", semester: "", section: "", label: "", active: true },
@@ -23,7 +27,7 @@ const EMPTY_FORMS = {
 
 function AcademicSetupSkeleton({ columns, rows = 6 }) {
   return (
-    <div className="table-wrap skeleton-table-wrap setup-table-skeleton-shell">
+    <div className="table-wrap skeleton-table-wrap setup-table-skeleton-shell w-full max-w-full min-w-0 overflow-auto">
       <table className="admin-table setup-table-skeleton-table" aria-hidden="true">
         <thead>
           <tr>
@@ -38,14 +42,14 @@ function AcademicSetupSkeleton({ columns, rows = 6 }) {
               {columns.map((column, columnIndex) => (
                 <td key={`setup-skeleton-cell-${rowIndex}-${column}`}>
                   {columnIndex === columns.length - 1 ? (
-                    <div className="setup-cell-actions">
-                      <SkeletonBlock className="skeleton-block setup-action-dot" />
-                      <SkeletonBlock className="skeleton-block setup-action-dot" />
+                    <div className="setup-cell-actions flex items-center gap-2">
+                      <SkeletonBlock className="skeleton-block setup-action-dot h-9 w-9 rounded-md" />
+                      <SkeletonBlock className="skeleton-block setup-action-dot h-9 w-9 rounded-md" />
                     </div>
                   ) : column.toLowerCase().includes("status") ? (
-                    <SkeletonBlock className="skeleton-line setup-cell-status" />
+                    <SkeletonBlock className="skeleton-line setup-cell-status h-3 w-[60%] rounded-full" />
                   ) : (
-                    <SkeletonBlock className={`skeleton-line${columnIndex === 0 ? " setup-cell-primary" : " setup-cell-regular"}`} />
+                    <SkeletonBlock className={`skeleton-line h-3 rounded-full${columnIndex === 0 ? " setup-cell-primary w-[75%]" : " setup-cell-regular w-[55%]"}`} />
                   )}
                 </td>
               ))}
@@ -260,9 +264,22 @@ function AdminAcademicSetup() {
 
   function actionButtons(item) {
     return (
-      <div className="academic-setup-actions">
-        <button type="button" className="action-btn view-btn" onClick={() => openEditModal(item)}><FaPencil /></button>
-        <button type="button" className="action-btn delete-btn" onClick={() => handleDelete(item)} disabled={deletingId === item.id}><FaTrash /></button>
+      <div className="academic-setup-actions flex items-center gap-2">
+        <button
+          type="button"
+          className="action-btn view-btn inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-purple-200 bg-white text-base text-violet-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:border-ui-border-dark dark:bg-ui-card-dark"
+          onClick={() => openEditModal(item)}
+        >
+          <FaPencil />
+        </button>
+        <button
+          type="button"
+          className="action-btn delete-btn inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-red-100 bg-white text-base text-red-500 transition-all duration-200 hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:border-ui-border-dark dark:bg-ui-card-dark"
+          onClick={() => handleDelete(item)}
+          disabled={deletingId === item.id}
+        >
+          <FaTrash />
+        </button>
       </div>
     );
   }
@@ -277,115 +294,152 @@ function AdminAcademicSetup() {
 
   return (
     <PageShell variant="admin" nav={adminNav} title="Academic Setup" subtitle="Manage master data for branches, classes, classrooms, subjects, and faculty assignments." profile={profile}>
-      <section className="admin-overview-hero academic-setup-hero">
-        <div className="admin-overview-hero-copy">
-          <span className="admin-overview-kicker">Academic Setup</span>
-          <h2>Central source of truth for academic structure</h2>
-          <p>Keep branches, class groups, rooms, subjects, and faculty-class assignments in one admin-controlled space.</p>
+      <section className="admin-overview-hero academic-setup-hero grid grid-cols-1 gap-[22px] rounded-[26px] border border-slate-400/[0.26] bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.18),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_24%),linear-gradient(155deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.96)_100%)] p-[26px] shadow-[0_20px_44px_rgba(15,23,42,0.08)] dark:border-ui-border-dark dark:bg-ui-card-dark">
+        <div className="admin-overview-hero-copy grid content-start gap-3.5">
+          <span className="admin-overview-kicker inline-flex w-fit items-center rounded-full bg-blue-600/10 px-3 py-2 text-xs font-extrabold uppercase tracking-[0.08em] text-blue-700">Academic Setup</span>
+          <h2 className="m-0 text-[clamp(1.9rem,3vw,2.7rem)] leading-[1.05] tracking-[-0.04em] text-slate-900 dark:text-ui-text-dark">Central source of truth for academic structure</h2>
+          <p className="m-0 max-w-[58ch] text-base leading-[1.65] text-slate-600 dark:text-ui-text-muted-dark">Keep branches, class groups, rooms, subjects, and faculty-class assignments in one admin-controlled space.</p>
         </div>
       </section>
 
-      <div className="admin-overview-stats">
+      <div className="admin-overview-stats my-6 [&_.stats-grid]:mb-0">
         <StatGrid stats={stats} />
       </div>
 
-      <SectionCard title="Setup Manager" className="admin-overview-card">
-        <div className="academic-setup-toolbar">
-          <div className="academic-setup-tabs">
+      <SectionCard title="Setup Manager" className="admin-overview-card rounded-[22px]">
+        <div className="academic-setup-toolbar mb-[18px] flex items-center justify-between gap-3.5 max-[992px]:flex-col max-[992px]:items-stretch">
+          <div className="academic-setup-tabs flex flex-wrap gap-2.5">
             {TABS.map((tab) => (
-              <button key={tab.id} type="button" className={`academic-setup-tab${activeTab === tab.id ? " active" : ""}`} onClick={() => setActiveTab(tab.id)}>
+              <button
+                key={tab.id}
+                type="button"
+                className={`academic-setup-tab${activeTab === tab.id ? " active" : ""} cursor-pointer rounded-full border px-3.5 py-2.5 font-bold transition-all duration-200 hover:-translate-y-px ${
+                  activeTab === tab.id
+                    ? "border-transparent bg-[linear-gradient(135deg,#2563eb_0%,#3b82f6_100%)] text-white"
+                    : "border-[#dbe4ef] bg-[#f8fbff] text-slate-600 hover:border-blue-300 dark:border-ui-border-dark dark:bg-ui-card-muted-dark dark:text-slate-300"
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
                 {tab.label}
               </button>
             ))}
           </div>
-          <button className="primary-btn" type="button" onClick={openCreateModal}>
+          <button
+            className="primary-btn inline-flex cursor-pointer items-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+            type="button"
+            onClick={openCreateModal}
+          >
             <FaPlus /> Add {TABS.find((tab) => tab.id === activeTab)?.singular || "Item"}
           </button>
         </div>
 
-        {actionMessage ? <p className="success-copy">{actionMessage}</p> : null}
-        {loading ? <AcademicSetupSkeleton rows={6} columns={renderColumns()} /> : error ? <p className="error-copy">{error}</p> : (
-          currentItems.length ? <div className="table-wrap"><table className="admin-table"><thead><tr>{renderColumns().map((column) => <th key={column}>{column}</th>)}</tr></thead><tbody>{renderRows().map((row, rowIndex) => <tr key={`${activeTab}-${rowIndex}`}>{row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>)}</tr>)}</tbody></table></div> : <p className="muted-copy">No {activeTab} added yet.</p>
+        {actionMessage ? <p className="success-copy mb-3 rounded-md border-l-[3px] border-l-emerald-500 bg-emerald-500/[0.08] p-3 text-sm text-emerald-700">{actionMessage}</p> : null}
+        {loading ? <AcademicSetupSkeleton rows={6} columns={renderColumns()} /> : error ? <p className="error-copy rounded-md border-l-[3px] border-l-red-600 bg-red-600/5 p-3 text-sm text-red-600">{error}</p> : (
+          currentItems.length ? (
+            <div className="table-wrap w-full max-w-full min-w-0 overflow-auto">
+              <table className="admin-table">
+                <thead><tr>{renderColumns().map((column) => <th key={column}>{column}</th>)}</tr></thead>
+                <tbody>{renderRows().map((row, rowIndex) => <tr key={`${activeTab}-${rowIndex}`}>{row.map((cell, cellIndex) => <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>)}</tr>)}</tbody>
+              </table>
+            </div>
+          ) : <p className="muted-copy m-0 text-ui-text-muted dark:text-ui-text-muted-dark">No {activeTab} added yet.</p>
         )}
       </SectionCard>
 
       {modalOpen ? (
-        <div className="admin-modal-overlay" onClick={() => !saving && closeModal()}>
-          <div className="admin-modal admin-form-modal academic-setup-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h3>{form.id ? "Edit" : "Add"} {TABS.find((tab) => tab.id === activeTab)?.singular || "Item"}</h3>
-              <button className="admin-modal-close" type="button" onClick={closeModal} disabled={saving}>x</button>
+        <div
+          className="admin-modal-overlay fixed inset-0 z-[1600] grid place-items-center bg-slate-900/45 p-5"
+          onClick={() => !saving && closeModal()}
+        >
+          <div
+            className="admin-modal admin-form-modal academic-setup-modal w-[min(640px,calc(100vw-24px))] overflow-hidden rounded-2xl bg-white shadow-[0_18px_40px_rgba(15,23,42,0.24)] dark:bg-ui-card-dark"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-modal-header flex items-center justify-between border-b border-slate-200 p-[14px_18px] dark:border-ui-border-dark">
+              <h3 className="m-0 text-[1.05rem] text-slate-800 dark:text-ui-text-dark">{form.id ? "Edit" : "Add"} {TABS.find((tab) => tab.id === activeTab)?.singular || "Item"}</h3>
+              <button
+                className="admin-modal-close h-8 w-8 cursor-pointer rounded-lg border border-slate-300 bg-white text-base text-slate-600 dark:border-ui-border-dark dark:bg-[#111827] dark:text-ui-text-dark"
+                type="button"
+                onClick={closeModal}
+                disabled={saving}
+              >
+                x
+              </button>
             </div>
-            <form className="admin-form academic-setup-form" onSubmit={handleSave}>
+            <form className="admin-form academic-setup-form grid gap-3 p-4" onSubmit={handleSave}>
               {activeTab === "branches" ? (
                 <>
-                  <label className="admin-form-label">Branch Code</label>
-                  <input className="admin-form-input" value={form.code || ""} onChange={(event) => setForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))} required />
-                  <label className="admin-form-label">Branch Name</label>
-                  <input className="admin-form-input" value={form.name || ""} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Branch Code</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.code || ""} onChange={(event) => setForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Branch Name</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.name || ""} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
                 </>
               ) : null}
 
               {activeTab === "classes" ? (
                 <>
-                  <label className="admin-form-label">Branch</label>
-                  <select className="admin-form-input" value={form.branch || ""} onChange={(event) => setForm((current) => ({ ...current, branch: event.target.value }))} required>{branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select>
-                  <label className="admin-form-label">Semester</label>
-                  <input className="admin-form-input" type="number" min="1" max="12" value={form.semester || ""} onChange={(event) => setForm((current) => ({ ...current, semester: event.target.value }))} required />
-                  <label className="admin-form-label">Section</label>
-                  <input className="admin-form-input" value={form.section || ""} onChange={(event) => setForm((current) => ({ ...current, section: event.target.value.toUpperCase() }))} required />
-                  <label className="admin-form-label">Label</label>
-                  <input className="admin-form-input" value={form.label || ""} onChange={(event) => setForm((current) => ({ ...current, label: event.target.value }))} placeholder="CSE / 5 / A" />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Branch</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.branch || ""} onChange={(event) => setForm((current) => ({ ...current, branch: event.target.value }))} required>{branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Semester</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} type="number" min="1" max="12" value={form.semester || ""} onChange={(event) => setForm((current) => ({ ...current, semester: event.target.value }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Section</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.section || ""} onChange={(event) => setForm((current) => ({ ...current, section: event.target.value.toUpperCase() }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Label</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.label || ""} onChange={(event) => setForm((current) => ({ ...current, label: event.target.value }))} placeholder="CSE / 5 / A" />
                 </>
               ) : null}
 
               {activeTab === "classrooms" ? (
                 <>
-                  <label className="admin-form-label">Classroom Name</label>
-                  <input className="admin-form-input" value={form.name || ""} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
-                  <label className="admin-form-label">Type</label>
-                  <input className="admin-form-input" value={form.type || ""} onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))} />
-                  <label className="admin-form-label">Capacity</label>
-                  <input className="admin-form-input" type="number" min="0" value={form.capacity || ""} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Classroom Name</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.name || ""} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Type</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.type || ""} onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))} />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Capacity</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} type="number" min="0" value={form.capacity || ""} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} />
                 </>
               ) : null}
 
               {activeTab === "subjects" ? (
                 <>
-                  <label className="admin-form-label">Subject Code</label>
-                  <input className="admin-form-input" value={form.code || ""} onChange={(event) => setForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))} required />
-                  <label className="admin-form-label">Subject Name</label>
-                  <input className="admin-form-input" value={form.name || ""} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
-                  <label className="admin-form-label">Branch</label>
-                  <select className="admin-form-input" value={form.branch || ""} onChange={(event) => setForm((current) => ({ ...current, branch: event.target.value }))} required>{branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select>
-                  <label className="admin-form-label">Semester</label>
-                  <input className="admin-form-input" type="number" min="1" max="12" value={form.semester || ""} onChange={(event) => setForm((current) => ({ ...current, semester: event.target.value }))} required />
-                  <label className="admin-form-label">Type</label>
-                  <select className="admin-form-input" value={form.type || "theory"} onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}><option value="theory">Theory</option><option value="lab">Lab</option><option value="tutorial">Tutorial</option></select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Subject Code</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.code || ""} onChange={(event) => setForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Subject Name</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} value={form.name || ""} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Branch</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.branch || ""} onChange={(event) => setForm((current) => ({ ...current, branch: event.target.value }))} required>{branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Semester</label>
+                  <input className={ADMIN_FORM_INPUT_CLASS} type="number" min="1" max="12" value={form.semester || ""} onChange={(event) => setForm((current) => ({ ...current, semester: event.target.value }))} required />
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Type</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.type || "theory"} onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}><option value="theory">Theory</option><option value="lab">Lab</option><option value="tutorial">Tutorial</option></select>
                 </>
               ) : null}
 
               {activeTab === "assignments" ? (
                 <>
-                  <label className="admin-form-label">Faculty</label>
-                  <select className="admin-form-input" value={form.faculty_email || ""} onChange={(event) => setForm((current) => ({ ...current, faculty_email: event.target.value }))} required>{facultyOptions.map((item) => <option key={item.email} value={item.email}>{item.label}</option>)}</select>
-                  <label className="admin-form-label">Branch</label>
-                  <select className="admin-form-input" value={form.branch || ""} onChange={(event) => setForm((current) => ({ ...current, branch: event.target.value, class_value: "", semester: "", section: "", subject_code: "" }))} required>{branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select>
-                  <label className="admin-form-label">Class</label>
-                  <select className="admin-form-input" value={form.class_value || ""} onChange={(event) => { const selected = classOptions.find((item) => item.value === event.target.value); setForm((current) => ({ ...current, class_value: event.target.value, branch: selected?.branch || current.branch, semester: selected ? String(selected.semester) : "", section: selected?.section || "", subject_code: "" })); }} required>{classOptions.filter((item) => !form.branch || item.branch === form.branch).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
-                  <label className="admin-form-label">Subject</label>
-                  <select className="admin-form-input" value={form.subject_code || ""} onChange={(event) => setForm((current) => ({ ...current, subject_code: event.target.value }))} required>{subjectOptions.map((item) => <option key={item.code} value={item.code}>{item.name} ({item.code})</option>)}</select>
-                  <label className="admin-form-label">Classroom</label>
-                  <select className="admin-form-input" value={form.classroom || ""} onChange={(event) => setForm((current) => ({ ...current, classroom: event.target.value }))}><option value="">Not assigned</option>{classroomOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Faculty</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.faculty_email || ""} onChange={(event) => setForm((current) => ({ ...current, faculty_email: event.target.value }))} required>{facultyOptions.map((item) => <option key={item.email} value={item.email}>{item.label}</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Branch</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.branch || ""} onChange={(event) => setForm((current) => ({ ...current, branch: event.target.value, class_value: "", semester: "", section: "", subject_code: "" }))} required>{branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Class</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.class_value || ""} onChange={(event) => { const selected = classOptions.find((item) => item.value === event.target.value); setForm((current) => ({ ...current, class_value: event.target.value, branch: selected?.branch || current.branch, semester: selected ? String(selected.semester) : "", section: selected?.section || "", subject_code: "" })); }} required>{classOptions.filter((item) => !form.branch || item.branch === form.branch).map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Subject</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.subject_code || ""} onChange={(event) => setForm((current) => ({ ...current, subject_code: event.target.value }))} required>{subjectOptions.map((item) => <option key={item.code} value={item.code}>{item.name} ({item.code})</option>)}</select>
+                  <label className={ADMIN_FORM_LABEL_CLASS}>Classroom</label>
+                  <select className={ADMIN_FORM_INPUT_CLASS} value={form.classroom || ""} onChange={(event) => setForm((current) => ({ ...current, classroom: event.target.value }))}><option value="">Not assigned</option>{classroomOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select>
                 </>
               ) : null}
 
-              <label className="admin-inline-check">
+              <label className="admin-inline-check inline-flex items-center gap-2.5 text-[0.95rem] font-semibold text-slate-700 dark:text-ui-text-dark [&>input]:h-4 [&>input]:w-4 [&>input]:accent-blue-600">
                 <input type="checkbox" checked={form.active !== false} onChange={(event) => setForm((current) => ({ ...current, active: event.target.checked }))} />
                 <span>Active</span>
               </label>
 
-              <button className="primary-btn admin-form-submit" type="submit" disabled={saving}>
+              <button
+                className="primary-btn admin-form-submit mt-1.5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-0 bg-[linear-gradient(135deg,#6366f1_0%,#8b5cf6_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.3)] transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)]"
+                type="submit"
+                disabled={saving}
+              >
                 {saving ? "Saving..." : form.id ? "Save Changes" : "Create"}
               </button>
             </form>
