@@ -356,23 +356,31 @@ function MiniCalendarWidget({ sizeClass }) {
     : "";
 
   return (
-    <div className={`calendar-card ${sizeClass}`}>
-      <div className="calendar-top">
-        <span className="calendar-mini-icon">{sizeClass === "tiny" ? "C" : "Cal"}</span>
-        <strong>{monthLabel}</strong>
-        <div className="calendar-top-actions">
-          <span className="today-chip">{today.getDate()}</span>
-          <button type="button" className="calendar-arrow" onClick={() => shiftMonth(-1)}>
+    <div className={`calendar-card ${sizeClass} relative flex h-full min-h-0 min-w-0 flex-col`}>
+      <div className="calendar-top mb-2 grid grid-cols-[auto_1fr_auto] items-center gap-2.5">
+        <span className="calendar-mini-icon text-[clamp(9px,0.9vw,11px)] text-slate-500 dark:text-sky-300">{sizeClass === "tiny" ? "C" : "Cal"}</span>
+        <strong className="text-center text-[clamp(11px,1.1vw,14px)] text-blue-600 dark:text-sky-300">{monthLabel}</strong>
+        <div className="calendar-top-actions flex items-center gap-2">
+          <span className="today-chip inline-grid h-[clamp(20px,2vw,24px)] min-w-[clamp(20px,2vw,24px)] place-items-center rounded-md border border-blue-400 bg-blue-400/[0.08] text-[clamp(9px,0.9vw,12px)] text-blue-400 dark:border-sky-300/45 dark:bg-sky-400/[0.12] dark:text-sky-300">{today.getDate()}</span>
+          <button
+            type="button"
+            className="calendar-arrow cursor-pointer border-0 bg-transparent p-[0_2px] text-[clamp(11px,1vw,14px)] text-blue-400 transition-[transform,color,opacity] duration-[160ms] hover:-translate-y-px hover:scale-[1.08] hover:text-blue-600 active:scale-[0.94] dark:text-sky-300"
+            onClick={() => shiftMonth(-1)}
+          >
             {"<"}
           </button>
-          <button type="button" className="calendar-arrow" onClick={() => shiftMonth(1)}>
+          <button
+            type="button"
+            className="calendar-arrow cursor-pointer border-0 bg-transparent p-[0_2px] text-[clamp(11px,1vw,14px)] text-blue-400 transition-[transform,color,opacity] duration-[160ms] hover:-translate-y-px hover:scale-[1.08] hover:text-blue-600 active:scale-[0.94] dark:text-sky-300"
+            onClick={() => shiftMonth(1)}
+          >
             {">"}
           </button>
         </div>
       </div>
-      <div className="mini-calendar">
+      <div className="mini-calendar relative grid flex-1 grid-cols-7 items-center gap-[10px_6px]">
         {weekdayLabels.map((day, index) => (
-          <strong key={`day-${index}-${day}`}>{day}</strong>
+          <strong key={`day-${index}-${day}`} className="rounded-full p-[4px_0] text-center text-[clamp(8px,0.8vw,11px)] font-medium text-slate-500 dark:text-slate-400">{day}</strong>
         ))}
         {cells.map((day, index) =>
           day ? (
@@ -383,65 +391,90 @@ function MiniCalendarWidget({ sizeClass }) {
               const hoverText = firstEvent
                 ? `${firstEvent.title}${dayEvents.length > 1 ? ` (+${dayEvents.length - 1} more)` : ""}`
                 : "";
+              const today_ = isToday(day);
               return (
                 <button
                   key={`${dateKey}-${index}`}
                   type="button"
-                  className={`calendar-day-btn${isToday(day) ? " today" : ""}${dayEvents.length ? " has-event" : ""}`}
+                  className={`calendar-day-btn${today_ ? " today" : ""}${dayEvents.length ? " has-event" : ""} group relative grid min-h-[clamp(24px,3vw,34px)] cursor-pointer place-items-center rounded-full border-0 bg-transparent p-[4px_0] text-[clamp(9px,1vw,13px)] text-slate-700 transition-[background,color,transform] duration-[180ms] hover:-translate-y-px hover:bg-blue-400/[0.16] dark:text-slate-300 dark:hover:bg-sky-400/[0.18] ${
+                    today_ ? "!h-[clamp(28px,4vw,52px)] !w-[clamp(28px,4vw,52px)] justify-self-center !bg-[#53a7ff] !text-white dark:!bg-sky-400 dark:!text-[#062033]" : ""
+                  } ${dayEvents.length ? "shadow-[inset_0_0_0_1px_rgba(77,160,255,0.4)] dark:shadow-[inset_0_0_0_1px_rgba(125,211,252,0.45)]" : ""}`}
                   onClick={() => openDayEditor(day)}
                 >
                   <span>{day}</span>
-                  {dayEvents.length ? <em className="calendar-event-pill">{dayEvents.length}</em> : null}
-                  {hoverText ? <i className="calendar-hover-tip">{hoverText}</i> : null}
+                  {dayEvents.length ? (
+                    <em className="calendar-event-pill absolute -right-1 -top-0.5 h-3.5 min-w-[14px] rounded-full bg-red-500 p-[0_4px] text-[9px] not-italic leading-[14px] text-white">{dayEvents.length}</em>
+                  ) : null}
+                  {hoverText ? (
+                    <i className="calendar-hover-tip pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 z-10 min-w-[120px] max-w-[min(210px,70vw)] -translate-x-1/2 translate-y-1 rounded-lg border border-slate-400/[0.22] bg-slate-900/92 p-[6px_8px] text-left text-[11px] not-italic leading-[1.25] text-[#f8fafc] opacity-0 shadow-[0_10px_22px_rgba(2,6,23,0.28)] transition-[opacity,transform] duration-[140ms] group-hover:translate-y-0 group-hover:opacity-100 dark:border-slate-600/80 dark:bg-slate-950/95">
+                      {hoverText}
+                    </i>
+                  ) : null}
                 </button>
               );
             })()
           ) : (
-            <span key={`blank-${index}`} className="calendar-day-empty" />
+            <span key={`blank-${index}`} className="calendar-day-empty rounded-full p-[4px_0] text-center opacity-25" />
           )
         )}
       </div>
 
       {isEditorOpen && selectedDateKey
         ? createPortal(
-            <div className="calendar-event-overlay" aria-hidden="true" onMouseDown={closeEditor}>
-              <div className="calendar-event-modal" onMouseDown={(event) => event.stopPropagation()}>
-                <div className="calendar-event-head">
-                  <h4>{selectedDateLabel}</h4>
-                  <button type="button" className="calendar-event-close" onClick={closeEditor} aria-label="Close calendar popup">
+            <div
+              className="calendar-event-overlay fixed inset-0 z-[3200] grid place-items-start justify-items-center bg-slate-950/50 p-[32px_14px_20px]"
+              aria-hidden="true"
+              onMouseDown={closeEditor}
+            >
+              <div
+                className="calendar-event-modal flex max-h-[calc(100vh-64px)] w-[min(560px,calc(100vw-24px))] flex-col gap-3 overflow-hidden rounded-2xl border border-[#dbe3ef] bg-white p-3.5 shadow-[0_20px_50px_rgba(15,23,42,0.24)] dark:border-slate-600 dark:bg-slate-900"
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div className="calendar-event-head sticky top-0 z-[1] flex items-center justify-between gap-2.5 bg-inherit pb-0.5">
+                  <h4 className="m-0 text-slate-900 dark:text-slate-200">{selectedDateLabel}</h4>
+                  <button
+                    type="button"
+                    className="calendar-event-close h-[30px] w-[30px] cursor-pointer rounded-full border-0 bg-red-500/[0.16] text-red-700"
+                    onClick={closeEditor}
+                    aria-label="Close calendar popup"
+                  >
                     x
                   </button>
                 </div>
 
-                <div className="calendar-event-form">
+                <div className="calendar-event-form grid min-w-0 gap-2">
                   <input
                     value={draft.title}
                     onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
                     placeholder="Event title"
+                    className="w-full rounded-xl border border-[#cbd5e1] bg-slate-50 p-[11px_12px] text-slate-900 focus:border-blue-500/55 focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] focus:outline-none dark:border-slate-600 dark:bg-[#111827] dark:text-slate-200 dark:focus:border-sky-300/60 dark:focus:bg-[#0f172a] dark:focus:shadow-[0_0_0_4px_rgba(56,189,248,0.14)]"
                   />
-                  <div className="calendar-event-time-row">
-                    <label className="calendar-event-field">
-                      <span>Start Time</span>
+                  <div className="calendar-event-time-row grid grid-cols-2 gap-2.5">
+                    <label className="calendar-event-field grid gap-1.5">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 dark:text-slate-400">Start Time</span>
                       <input
                         type="time"
                         value={draft.startTime}
                         onChange={(event) => setDraft((current) => ({ ...current, startTime: event.target.value }))}
+                        className="w-full min-h-[46px] rounded-xl border border-[#cbd5e1] bg-slate-50 p-[11px_12px] font-semibold tracking-[0.02em] text-slate-900 [color-scheme:light] focus:border-blue-500/55 focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] focus:outline-none dark:border-slate-600 dark:bg-[#111827] dark:text-slate-200 dark:[color-scheme:dark] dark:focus:border-sky-300/60 dark:focus:bg-[#0f172a] dark:focus:shadow-[0_0_0_4px_rgba(56,189,248,0.14)] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-100 dark:[&::-webkit-calendar-picker-indicator]:brightness-125 dark:[&::-webkit-calendar-picker-indicator]:invert"
                       />
                     </label>
-                    <label className="calendar-event-field">
-                      <span>End Time</span>
+                    <label className="calendar-event-field grid gap-1.5">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 dark:text-slate-400">End Time</span>
                       <input
                         type="time"
                         value={draft.endTime}
                         onChange={(event) => setDraft((current) => ({ ...current, endTime: event.target.value }))}
+                        className="w-full min-h-[46px] rounded-xl border border-[#cbd5e1] bg-slate-50 p-[11px_12px] font-semibold tracking-[0.02em] text-slate-900 [color-scheme:light] focus:border-blue-500/55 focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] focus:outline-none dark:border-slate-600 dark:bg-[#111827] dark:text-slate-200 dark:[color-scheme:dark] dark:focus:border-sky-300/60 dark:focus:bg-[#0f172a] dark:focus:shadow-[0_0_0_4px_rgba(56,189,248,0.14)] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-100 dark:[&::-webkit-calendar-picker-indicator]:brightness-125 dark:[&::-webkit-calendar-picker-indicator]:invert"
                       />
                     </label>
                   </div>
-                  <label className="calendar-event-field">
-                    <span>Repeat</span>
+                  <label className="calendar-event-field grid gap-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-slate-600 dark:text-slate-400">Repeat</span>
                     <select
                       value={draft.repeat}
                       onChange={(event) => setDraft((current) => ({ ...current, repeat: event.target.value }))}
+                      className="w-full appearance-none rounded-xl border border-[#cbd5e1] bg-slate-50 p-[11px_12px] pr-3 text-slate-900 [background-image:none] focus:border-blue-500/55 focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] focus:outline-none dark:border-slate-600 dark:bg-[#111827] dark:text-slate-200 dark:focus:border-sky-300/60 dark:focus:bg-[#0f172a] dark:focus:shadow-[0_0_0_4px_rgba(56,189,248,0.14)]"
                     >
                       <option value="none">Does not repeat</option>
                       <option value="weekly">Weekly</option>
@@ -453,60 +486,96 @@ function MiniCalendarWidget({ sizeClass }) {
                     value={draft.location}
                     onChange={(event) => setDraft((current) => ({ ...current, location: event.target.value }))}
                     placeholder="Location"
+                    className="w-full rounded-xl border border-[#cbd5e1] bg-slate-50 p-[11px_12px] text-slate-900 focus:border-blue-500/55 focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] focus:outline-none dark:border-slate-600 dark:bg-[#111827] dark:text-slate-200 dark:focus:border-sky-300/60 dark:focus:bg-[#0f172a] dark:focus:shadow-[0_0_0_4px_rgba(56,189,248,0.14)]"
                   />
                   <textarea
                     value={draft.description}
                     onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
                     placeholder="Description"
                     rows={3}
+                    className="w-full rounded-xl border border-[#cbd5e1] bg-slate-50 p-[11px_12px] text-slate-900 focus:border-blue-500/55 focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] focus:outline-none dark:border-slate-600 dark:bg-[#111827] dark:text-slate-200 dark:focus:border-sky-300/60 dark:focus:bg-[#0f172a] dark:focus:shadow-[0_0_0_4px_rgba(56,189,248,0.14)]"
                   />
-                  <button type="button" className="calendar-save-btn" onClick={saveEvent}>
+                  <button
+                    type="button"
+                    className="calendar-save-btn cursor-pointer rounded-lg border-0 bg-[#0284c7] p-[10px_12px] font-bold text-white"
+                    onClick={saveEvent}
+                  >
                     {calendarBusy ? "Saving..." : editingEventId ? "Update Event" : "Add Event"}
                   </button>
-                  {calendarError ? <p className="calendar-error-copy">{calendarError}</p> : null}
+                  {calendarError ? <p className="calendar-error-copy m-[2px_0_0] text-xs font-semibold text-red-700 dark:text-red-300">{calendarError}</p> : null}
                 </div>
 
-                <div className="calendar-event-list">
+                <div className="calendar-event-list grid max-h-[210px] gap-2 overflow-auto pr-0.5">
                   {selectedEvents.length ? (
                     selectedEvents.map((eventItem) => (
                       <article
                         key={eventItem.id}
-                        className={`calendar-event-item${activeEventId === eventItem.id ? " active" : ""}`}
+                        className={`calendar-event-item${activeEventId === eventItem.id ? " active" : ""} rounded-[10px] border border-[#dbe3ef] bg-[#f8fbff] p-2.5 dark:border-slate-600 dark:bg-[#111827] ${
+                          activeEventId === eventItem.id ? "border-blue-400 shadow-[0_4px_12px_rgba(37,99,235,0.16)]" : ""
+                        }`}
                       >
-                        <header>
-                          <strong>{eventItem.title}</strong>
-                          <div className="calendar-event-item-actions">
-                            <button type="button" onClick={() => setActiveEventId((current) => (current === eventItem.id ? null : eventItem.id))}>
+                        <header className="flex items-center justify-between gap-2.5">
+                          <strong className="text-slate-900 dark:text-slate-200">{eventItem.title}</strong>
+                          <div className="calendar-event-item-actions inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              className="rounded-[7px] border border-[#cbd5e1] bg-white p-[4px_8px] text-[11px] text-slate-700 dark:border-slate-600 dark:bg-[#0f172a] dark:text-slate-300"
+                              onClick={() => setActiveEventId((current) => (current === eventItem.id ? null : eventItem.id))}
+                            >
                               {activeEventId === eventItem.id ? "Hide" : "View"}
                             </button>
-                            <button type="button" onClick={() => startEdit(eventItem)}>Edit</button>
-                            <button type="button" onClick={() => removeEvent(eventItem.id)}>Delete</button>
+                            <button
+                              type="button"
+                              className="rounded-[7px] border border-[#cbd5e1] bg-white p-[4px_8px] text-[11px] text-slate-700 dark:border-slate-600 dark:bg-[#0f172a] dark:text-slate-300"
+                              onClick={() => startEdit(eventItem)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-[7px] border border-[#cbd5e1] bg-white p-[4px_8px] text-[11px] text-slate-700 dark:border-slate-600 dark:bg-[#0f172a] dark:text-slate-300"
+                              onClick={() => removeEvent(eventItem.id)}
+                            >
+                              Delete
+                            </button>
                           </div>
                         </header>
-                        <p>{formatEventTime(eventItem)}</p>
+                        <p className="m-[4px_0_0] text-xs text-slate-500 dark:text-slate-400">{formatEventTime(eventItem)}</p>
                         {eventItem.repeat && eventItem.repeat !== "none" ? (
                           <p className="calendar-repeat-copy">{getRepeatLabel(eventItem.repeat)}</p>
                         ) : null}
                       </article>
                     ))
                   ) : (
-                    <p className="calendar-empty-state">No events yet for this day.</p>
+                    <p className="calendar-empty-state m-0 text-[13px] text-slate-500 dark:text-slate-400">No events yet for this day.</p>
                   )}
                 </div>
 
                 {activeEvent ? (
-                  <div className="calendar-event-details">
-                    <h5>{activeEvent.title}</h5>
-                    <p><strong>Time:</strong> {formatEventTime(activeEvent)}</p>
-                    <p><strong>Repeat:</strong> {getRepeatLabel(activeEvent.repeat)}</p>
-                    <p><strong>Location:</strong> {activeEvent.location || "-"}</p>
-                    <p><strong>Description:</strong> {activeEvent.description || "-"}</p>
-                    <button type="button" onClick={() => startEdit(activeEvent)}>Edit</button>
+                  <div className="calendar-event-details min-w-0 rounded-[10px] border border-[#dbe3ef] bg-[#f8fbff] p-2.5 dark:border-slate-600 dark:bg-[#111827]">
+                    <h5 className="m-[0_0_6px] text-slate-900 dark:text-slate-200">{activeEvent.title}</h5>
+                    <p className="m-[3px_0] text-[13px] text-slate-700 dark:text-slate-400"><strong>Time:</strong> {formatEventTime(activeEvent)}</p>
+                    <p className="m-[3px_0] text-[13px] text-slate-700 dark:text-slate-400"><strong>Repeat:</strong> {getRepeatLabel(activeEvent.repeat)}</p>
+                    <p className="m-[3px_0] text-[13px] text-slate-700 dark:text-slate-400"><strong>Location:</strong> {activeEvent.location || "-"}</p>
+                    <p className="m-[3px_0] text-[13px] text-slate-700 dark:text-slate-400"><strong>Description:</strong> {activeEvent.description || "-"}</p>
+                    <button
+                      type="button"
+                      className="rounded-[7px] border border-[#cbd5e1] bg-white p-[4px_8px] text-[11px] text-slate-700 dark:border-slate-600 dark:bg-[#0f172a] dark:text-slate-300"
+                      onClick={() => startEdit(activeEvent)}
+                    >
+                      Edit
+                    </button>
                   </div>
                 ) : null}
 
-                <div className="calendar-event-footer">
-                  <button type="button" className="calendar-close-btn" onClick={closeEditor}>Close</button>
+                <div className="calendar-event-footer flex justify-end">
+                  <button
+                    type="button"
+                    className="calendar-close-btn cursor-pointer rounded-lg border border-[#cbd5e1] bg-white p-[8px_12px] text-xs text-slate-700 dark:border-slate-600 dark:bg-[#0f172a] dark:text-slate-300"
+                    onClick={closeEditor}
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             </div>,
