@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-ui-bg: #f5f7fb;
   --color-ui-bg-dark: #0f172a;
