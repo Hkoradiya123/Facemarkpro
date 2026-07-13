@@ -21,10 +21,10 @@ function AttendanceOverviewChart({ sizeClass, summary = { Present: 0, Absent: 0 
   const absentPct = total ? 100 - presentPct : 0;
 
   return (
-    <div className={`chart-card compact ${sizeClass}`}>
+    <div className={`chart-card compact ${sizeClass} relative flex h-full min-h-0 min-w-0 flex-col`}>
       {sizeClass !== "tiny" ? (
         <div>
-          <div className="chart-legend">Today's Attendance Overview</div>
+          <div className="chart-legend max-w-full self-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-[#4fced6]/10 p-[4px_10px] text-[clamp(9px,0.9vw,11px)] text-slate-500 dark:text-ui-text-muted-dark">Today's Attendance Overview</div>
           <div className="chart-subtitle" style={{ fontSize: '0.85rem', color: '#888', marginBottom: '10px' }}>
             All classes combined
           </div>
